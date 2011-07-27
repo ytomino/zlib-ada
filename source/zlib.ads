@@ -1,8 +1,8 @@
 with Ada.Finalization;
 with Ada.IO_Exceptions;
 with Ada.Streams;
-with C.zconf;
-with C.zlib;
+private with C.zconf;
+private with C.zlib;
 package zlib is
 	pragma Preelaborate;
 	pragma Linker_Options ("-lz");
@@ -19,33 +19,41 @@ package zlib is
 	Default_Compression : constant Compression_Level;
 	
 	-- method
-	type Compression_Method is (Deflated);
-	for Compression_Method use (Deflated => C.zlib.Z_DEFLATED);
+	package Compression_Methods is
+		type Compression_Method is (Deflated);
+	private
+		for Compression_Method use (Deflated => C.zlib.Z_DEFLATED);
+	end Compression_Methods;
+	type Compression_Method is new Compression_Methods.Compression_Method;
 	
 	-- windowBits
-	type Window_Bits is range 8 .. C.zconf.MAX_WBITS;
+	type Window_Bits is range 8 .. 15;
 	Default_Window_Bits : constant Window_Bits := 15;
 	
 	type Inflation_Header is (None, Default, GZip, Auto);
 	subtype Deflation_Header is Inflation_Header range None .. GZip;
 	
 	-- memLevel
-	type Memory_Level is range 1 .. C.zconf.MAX_MEM_LEVEL;
+	type Memory_Level is range 1 .. 9;
 	Default_Memory_Level : constant Memory_Level := 8;
 	
 	-- stragegy
-	type Strategy is (
-		Default_Strategy,
-		Filtered,
-		Huffman_Only,
-		RLE,
-		Fixed);
-	for Strategy use (
-		Default_Strategy => C.zlib.Z_DEFAULT_STRATEGY,
-		Filtered => C.zlib.Z_FILTERED,
-		Huffman_Only => C.zlib.Z_HUFFMAN_ONLY,
-		RLE => C.zlib.Z_RLE,
-		Fixed => C.zlib.Z_FIXED);
+	package Strategies is
+		type Strategy is (
+			Default_Strategy,
+			Filtered,
+			Huffman_Only,
+			RLE,
+			Fixed);
+	private
+		for Strategy use (
+			Default_Strategy => C.zlib.Z_DEFAULT_STRATEGY,
+			Filtered => C.zlib.Z_FILTERED,
+			Huffman_Only => C.zlib.Z_HUFFMAN_ONLY,
+			RLE => C.zlib.Z_RLE,
+			Fixed => C.zlib.Z_FIXED);
+	end Strategies;
+	type Strategy is new Strategies.Strategy;
 	
 	function Deflate_Init (
 		Level : Compression_Level := Default_Compression;
@@ -204,6 +212,11 @@ package zlib is
 	
 private
 	use type Ada.Streams.Stream_Element_Offset;
+	
+	pragma Compile_Time_Error (Window_Bits'Last /= C.zconf.MAX_WBITS,
+		"MAX_WBITS is mismatch");
+	pragma Compile_Time_Error (Memory_Level'Last /= C.zconf.MAX_MEM_LEVEL,
+		"MAX_MEM_LEVEL is mismatch");
 	
 	type Status is (Closed, Deflating, Inflating);
 	pragma Discard_Names (Status);
