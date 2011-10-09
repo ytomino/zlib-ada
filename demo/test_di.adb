@@ -6,7 +6,6 @@ procedure test_di is
 	use type Ada.Streams.Stream_Element;
 	use type Ada.Streams.Stream_Element_Offset;
 begin
-	Ada.Text_IO.Put_Line ("zlib version " & zlib.Version);
 	declare
 		Source_File : Ada.Streams.Stream_IO.File_Type;
 	begin

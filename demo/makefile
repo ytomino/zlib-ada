@@ -1,10 +1,24 @@
 SOURCEDIR=../source
-BUILDDIR=build
-IMPORTDIR:=import
 
-ifneq ($(DRAKE_RTSROOT),)
 HOST=$(shell gcc -dumpmachine)
 TARGET=$(HOST)
+
+ifeq ($(TARGET),$(HOST))
+GNATMAKE=gnatmake
+GCC=$(dir $(shell which $(GNATMAKE)))gcc
+BUILDDIR=build
+IMPORTDIR:=import
+else
+GNATMAKE=$(TARGET)-gnatmake
+GCC=$(TARGET)-gcc
+BUILDDIR=build-$(TARGET)
+IMPORTDIR:=import-$(TARGET)
+ifneq ($(findstring freebsd,$(TARGET)),)
+LFLAGS=-lm -lpthread
+endif
+endif
+
+ifneq ($(DRAKE_RTSROOT),)
 DRAKE_RTSDIR=$(DRAKE_RTSROOT)/$(TARGET)
 endif
 ifneq ($(DRAKE_RTSDIR),)
@@ -19,25 +33,24 @@ ifneq ($(DRAKE),)
 OFFICIAL_DEMO:=$(filter-out $(BUILDDIR)/mtest,$(OFFICIAL_DEMO))
 endif
 
-.PHONY: all clean $(BUILDDIR)/test_di $(OFFICIAL_DEMO)
+.PHONY: all clean
 
-all: $(BUILDDIR)/test_di $(OFFICIAL_DEMO)
+all: $(BUILDDIR)/test_di $(BUILDDIR)/version $(OFFICIAL_DEMO)
 
-$(BUILDDIR)/test_di: test_di.adb $(BUILDDIR) $(IMPORTDIR)
-	cd $(BUILDDIR) && gnatmake -g $(MFLAGS) -I../$(SOURCEDIR) -I../$(IMPORTDIR) $(CFLAGS) ../$< $(LFLAGS)
+$(BUILDDIR)/%: %.adb $(BUILDDIR) $(IMPORTDIR) $(wildcard $(SOURCEDIR)/*)
+	cd $(BUILDDIR) && $(GNATMAKE) -g $(MFLAGS) -I../$(SOURCEDIR) -I../$(IMPORTDIR) $(CFLAGS) ../$< -largs $(LFLAGS)
 
-$(OFFICIAL_DEMO): $(BUILDDIR)/%: official-demo/%.adb $(BUILDDIR) $(IMPORTDIR)
-	cd $(BUILDDIR) && gnatmake -g $(MFLAGS) -I../$(SOURCEDIR) -I../$(IMPORTDIR) ../$< $(LFLAGS)
+$(OFFICIAL_DEMO): $(BUILDDIR)/%: official-demo/%.adb $(BUILDDIR) $(IMPORTDIR) $(wildcard $(SOURCEDIR)/*)
+	cd $(BUILDDIR) && $(GNATMAKE) -g $(MFLAGS) -I../$(SOURCEDIR) -I../$(IMPORTDIR) ../$< -largs $(LFLAGS)
 
 $(BUILDDIR):
 	mkdir $(BUILDDIR)
 
 ifneq ($(IMPORTDIR),)
 $(IMPORTDIR): $(SOURCEDIR)/import.h
-	headmaster -p --to ada -gcc=$(dir $(shell which gnatmake))gcc -D $(IMPORTDIR) $+
+	headmaster --to ada -gcc=$(GCC) $(addprefix -isystem ,$(INCDIR)) -p -D $(IMPORTDIR) $+
 endif
 
 clean:
-	-rm -rf build
-	-rm -rf import
+	-rm -rf build* import*
 	-rm test_di.gz testzlib.out testzlib.zlb testzlib.in
