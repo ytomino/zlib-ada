@@ -3,7 +3,11 @@ package body zlib is
 	use type C.signed_int;
 	use type C.size_t;
 	
-	-- local
+	type unsigned_char_array is
+		array (C.size_t range <>) of aliased C.unsigned_char;
+	pragma Suppress_Initialization (unsigned_char_array);
+	pragma Convention (C, unsigned_char_array);
+	-- C.unsigned_char_array is not generated in some cases
 	
 	Flush_Table : constant array (Boolean) of C.signed_int := (
 		C.zlib.Z_NO_FLUSH, C.zlib.Z_FINISH);
@@ -129,8 +133,8 @@ package body zlib is
 		end if;
 	end Internal_Inflate_End;
 	
-	-- body
-
+	-- implementation
+	
 	procedure Deflate (
 		Stream : in out zlib.Stream;
 		In_Item : in Ada.Streams.Stream_Element_Array;
@@ -145,10 +149,10 @@ package body zlib is
 		else
 			declare
 				C_In_Size : constant C.size_t := In_Item'Length;
-				C_In_Item : C.unsigned_char_array (0 .. C_In_Size - 1);
+				C_In_Item : unsigned_char_array (0 .. C_In_Size - 1);
 				for C_In_Item'Address use In_Item'Address;
 				C_Out_Size : constant C.size_t := Out_Item'Length;
-				C_Out_Item : C.unsigned_char_array (0 .. C_Out_Size - 1);
+				C_Out_Item : unsigned_char_array (0 .. C_Out_Size - 1);
 				for C_Out_Item'Address use Out_Item'Address;
 				Result : C.signed_int;
 			begin
@@ -344,10 +348,10 @@ package body zlib is
 		else
 			declare
 				C_In_Size : constant C.size_t := In_Item'Length;
-				C_In_Item : C.unsigned_char_array (0 .. C_In_Size - 1);
+				C_In_Item : unsigned_char_array (0 .. C_In_Size - 1);
 				for C_In_Item'Address use In_Item'Address;
 				C_Out_Size : constant C.size_t := Out_Item'Length;
-				C_Out_Item : C.unsigned_char_array (0 .. C_Out_Size - 1);
+				C_Out_Item : unsigned_char_array (0 .. C_Out_Size - 1);
 				for C_Out_Item'Address use Out_Item'Address;
 				Result : C.signed_int;
 			begin
