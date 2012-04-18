@@ -1,11 +1,9 @@
 package body zlib.Streams is
 	
-	-- local
-	
 	Buffer_Length_Table : constant array (Direction) of
 		Ada.Streams.Stream_Element_Count := (Reading => 2 ** 15, Writing => 0);
 	
-	-- body
+	-- implementation
 	
 	function Create_Deflation (
 		Direction : Streams.Direction := Writing;
@@ -74,7 +72,9 @@ package body zlib.Streams is
 				True,
 				Finished);
 				if Object.Direction = Writing then
-					Ada.Streams.Write (Object.Target.all, Out_Item (Out_Item'First .. Out_Last));
+					Ada.Streams.Write (
+						Object.Target.all,
+						Out_Item (Out_Item'First .. Out_Last));
 				end if;
 			exit when Finished;
 		end loop;
@@ -87,7 +87,7 @@ package body zlib.Streams is
 	begin
 		if Object.Direction /= Reading then
 			raise Status_Error;
-		elsif Object.Raw.Stream_End then
+		elsif End_Of (Object.Raw) then
 			Last := Item'First - 1;
 		else
 			declare
@@ -98,10 +98,14 @@ package body zlib.Streams is
 			begin
 				loop
 					if Object.In_First > Object.In_Last then
-						Ada.Streams.Read (Object.Target.all, Object.In_Buffer, Object.In_Last);
+						Ada.Streams.Read (
+							Object.Target.all,
+							Object.In_Buffer,
+							Object.In_Last);
 						Object.In_First := Object.In_Buffer'First;
-						if Object.Raw.Status = Deflating then
-							Finish := Finish or else Object.In_Last < Object.In_Buffer'Last;
+						if Status (Object.Raw) = Deflating then
+							Finish := Finish
+								or else Object.In_Last < Object.In_Buffer'Last;
 						end if;
 					end if;
 					Deflate_Or_Inflate (
@@ -143,7 +147,9 @@ package body zlib.Streams is
 						Out_Last,
 						False,
 						Finished);
-					Ada.Streams.Write (Object.Target.all, Out_Item (Out_Item'First .. Out_Last));
+					Ada.Streams.Write (
+						Object.Target.all,
+						Out_Item (Out_Item'First .. Out_Last));
 					exit when Finished or else In_Used >= Item'Last;
 					In_First := In_Used + 1;
 				end loop;
@@ -153,13 +159,13 @@ package body zlib.Streams is
 	
 	-- compatibility
 	
-	procedure Close (Stream : in out Streams.Stream) is
+	procedure Close (Stream : in out Streams.Stream'Class) is
 	begin
 		Close (Stream.Raw);
 	end Close;
 	
 	procedure Create (
-		Stream : in out Streams.Stream;
+		Stream : in out Streams.Stream'Class;
 		Mode : in Stream_Mode;
 		Back : in Stream_Access;
 		Back_Compressed : in Boolean;
@@ -189,7 +195,7 @@ package body zlib.Streams is
 	end Create;
 	
 	procedure Flush (
-		Stream : in out Streams.Stream;
+		Stream : in out Streams.Stream'Class;
 		Mode : in Flush_Mode) is
 	begin
 		if Mode then
@@ -197,20 +203,20 @@ package body zlib.Streams is
 		end if;
 	end Flush;
 	
-	function Read_Total_In (Stream : Streams.Stream) return Count is
+	function Read_Total_In (Stream : Streams.Stream'Class) return Count is
 	begin
 		return Total_In (Stream.Raw);
 	end Read_Total_In;
 	
-	function Read_Total_Out (Stream : Streams.Stream) return Count is
+	function Read_Total_Out (Stream : Streams.Stream'Class) return Count is
 	begin
 		return Total_Out (Stream.Raw);
 	end Read_Total_Out;
 	
-	function Write_Total_In (Stream : Streams.Stream) return Count
+	function Write_Total_In (Stream : Streams.Stream'Class) return Count
 		renames Read_Total_Out;
 	
-	function Write_Total_Out (Stream : Streams.Stream) return Count
+	function Write_Total_Out (Stream : Streams.Stream'Class) return Count
 		renames Read_Total_Out;
 	
 end zlib.Streams;

@@ -36,7 +36,7 @@ package zlib.Streams is
 	function In_Stream return Stream_Mode renames Reading;
 	
 	procedure Create (
-		Stream : in out Streams.Stream;
+		Stream : in out Streams.Stream'Class;
 		Mode : in Stream_Mode;
 		Back : in Stream_Access;
 		Back_Compressed : in Boolean;
@@ -45,15 +45,15 @@ package zlib.Streams is
 		Header : in Header_Type := Default);
 	
 	procedure Flush (
-		Stream : in out Streams.Stream;
+		Stream : in out Streams.Stream'Class;
 		Mode : in Flush_Mode);
 	
-	procedure Close (Stream : in out Streams.Stream);
+	procedure Close (Stream : in out Streams.Stream'Class);
 	
-	function Read_Total_In (Stream : Streams.Stream) return Count;
-	function Read_Total_Out (Stream : Streams.Stream) return Count;
-	function Write_Total_In (Stream : Streams.Stream) return Count;
-	function Write_Total_Out (Stream : Streams.Stream) return Count;
+	function Read_Total_In (Stream : Streams.Stream'Class) return Count;
+	function Read_Total_Out (Stream : Streams.Stream'Class) return Count;
+	function Write_Total_In (Stream : Streams.Stream'Class) return Count;
+	function Write_Total_Out (Stream : Streams.Stream'Class) return Count;
 	
 private
 	

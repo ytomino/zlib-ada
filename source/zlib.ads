@@ -218,16 +218,40 @@ private
 	pragma Compile_Time_Error (Memory_Level'Last /= C.zconf.MAX_MEM_LEVEL,
 		"MAX_MEM_LEVEL is mismatch");
 	
-	type Status is (Closed, Deflating, Inflating);
-	pragma Discard_Names (Status);
+	type Status_Type is (Closed, Deflating, Inflating);
+	pragma Discard_Names (Status_Type);
 	
-	type Stream is limited new Ada.Finalization.Limited_Controlled with record
-		Z_Stream : aliased C.zlib.z_stream;
-		Status : zlib.Status := Closed;
-		Stream_End : Boolean;
-	end record;
+	package Primitives is
+		
+		type Stream is limited private;
+		
+		function Z (Object : Stream) return not null access C.zlib.z_stream;
+		pragma Inline (Z);
+		function Status (Object : Stream) return Status_Type;
+		pragma Inline (Status);
+		function End_Of (Object : Stream) return Boolean;
+		pragma Inline (End_Of);
+		
+		procedure Set_Start (Object : in out Stream; Status : in Status_Type);
+		pragma Inline (Set_Start);
+		procedure Set_End (Object : in out Stream);
+		pragma Inline (Set_End);
+		
+	private
+		
+		type Stream is
+			limited new Ada.Finalization.Limited_Controlled with
+		record
+			Z_Stream : aliased C.zlib.z_stream;
+			Status : Status_Type := Closed;
+			Stream_End : Boolean;
+		end record;
+		
+		overriding procedure Finalize (Object : in out Stream);
 	
-	overriding procedure Finalize (Object : in out Stream);
+	end Primitives;
+	
+	type Stream is new Primitives.Stream;
 	
 	No_Compression : constant Compression_Level := C.zlib.Z_NO_COMPRESSION;
 	Best_Speed : constant Compression_Level := C.zlib.Z_BEST_SPEED;
