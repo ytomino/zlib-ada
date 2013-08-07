@@ -1,3 +1,4 @@
+with System;
 with C.string;
 package body zlib is
 	use type C.signed_int;
@@ -62,7 +63,12 @@ package body zlib is
 		Memory_Level : in zlib.Memory_Level;
 		Strategy : in zlib.Strategy)
 	is
-		Result : constant C.signed_int := C.zlib.deflateInit2q (
+		Result : C.signed_int;
+	begin
+		Z_Stream.zalloc := null;
+		Z_Stream.zfree := null;
+		Z_Stream.opaque := System.Null_Address;
+		Result := C.zlib.deflateInit2q (
 			Z_Stream,
 			level => Compression_Level'Enum_Rep (Level),
 			method => Compression_Method'Enum_Rep (Method),
@@ -71,7 +77,6 @@ package body zlib is
 			strategy => zlib.Strategy'Enum_Rep (Strategy),
 			version => C.zlib.ZLIB_VERSION (C.zlib.ZLIB_VERSION'First)'Access,
 			stream_size => C.zlib.z_stream'Size / Standard'Storage_Unit);
-	begin
 		if Result /= C.zlib.Z_OK then
 			Raise_Error (Result);
 		end if;
@@ -92,12 +97,16 @@ package body zlib is
 		Window_Bits : in zlib.Window_Bits;
 		Header : in Inflation_Header)
 	is
-		Result : constant C.signed_int := C.zlib.inflateInit2q (
+		Result : C.signed_int;
+	begin
+		Z_Stream.zalloc := null;
+		Z_Stream.zfree := null;
+		Z_Stream.opaque := System.Null_Address;
+		Result := C.zlib.inflateInit2q (
 			Z_Stream,
 			windowBits => Make_Window_Bits (Window_Bits, Header),
 			version => C.zlib.ZLIB_VERSION (C.zlib.ZLIB_VERSION'First)'Access,
 			stream_size => C.zlib.z_stream'Size / Standard'Storage_Unit);
-	begin
 		if Result /= C.zlib.Z_OK then
 			Raise_Error (Result);
 		end if;
