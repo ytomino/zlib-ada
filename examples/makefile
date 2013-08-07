@@ -35,7 +35,7 @@ endif
 
 .PHONY: all clean
 
-all: $(BUILDDIR)/test_di $(BUILDDIR)/version $(OFFICIAL_DEMO)
+all: $(BUILDDIR)/str $(BUILDDIR)/test_di $(BUILDDIR)/version $(OFFICIAL_DEMO)
 
 $(BUILDDIR)/%: %.adb $(BUILDDIR) $(IMPORTDIR) $(wildcard $(SOURCEDIR)/*)
 	cd $(BUILDDIR) && $(GNATMAKE) -g $(MFLAGS) -I../$(SOURCEDIR) -I../$(IMPORTDIR) $(CFLAGS) ../$< -largs $(LFLAGS)
