@@ -186,11 +186,16 @@ private
 	pragma Compile_Time_Error (Memory_Level'Last /= C.zconf.MAX_MEM_LEVEL,
 		"MAX_MEM_LEVEL is mismatch");
 	
+	type Finalize_Type is access
+		function (strm : access C.zlib.z_stream) return C.signed_int;
+	pragma Convention (C, Finalize_Type);
+	
 	type Status_Type is (Closed, Deflating, Inflating);
 	pragma Discard_Names (Status_Type);
 	
 	type Non_Controlled_Stream is record
 		Z_Stream : aliased C.zlib.z_stream;
+		Finalize : Finalize_Type;
 		Status : Status_Type := Closed;
 		Stream_End : Boolean;
 	end record;

@@ -82,19 +82,10 @@ package body zlib is
 		if Result /= C.zlib.Z_OK then
 			Raise_Error (Result);
 		end if;
+		NC_Stream.Finalize := C.zlib.deflateEnd'Access;
 		NC_Stream.Status := Deflating;
 		NC_Stream.Stream_End := False;
 	end Internal_Deflate_Init;
-	
-	procedure Internal_Deflate_End (
-		Z_Stream : not null access C.zlib.z_stream)
-	is
-		Result : constant C.signed_int := C.zlib.deflateEnd (Z_Stream);
-	begin
-		if Result /= C.zlib.Z_OK then
-			Raise_Error (Result);
-		end if;
-	end Internal_Deflate_End;
 	
 	procedure Internal_Inflate_Init (
 		Stream : in out zlib.Stream;
@@ -116,19 +107,27 @@ package body zlib is
 		if Result /= C.zlib.Z_OK then
 			Raise_Error (Result);
 		end if;
+		NC_Stream.Finalize := C.zlib.inflateEnd'Access;
 		NC_Stream.Status := Inflating;
 		NC_Stream.Stream_End := False;
 	end Internal_Inflate_Init;
 	
-	procedure Internal_Inflate_End (
-		Z_Stream : not null access C.zlib.z_stream)
-	is
-		Result : constant C.signed_int := C.zlib.inflateEnd (Z_Stream);
+	procedure Close (
+		NC_Stream : in out Non_Controlled_Stream;
+		Raise_On_Error : Boolean) is
 	begin
-		if Result /= C.zlib.Z_OK then
-			Raise_Error (Result);
+		if NC_Stream.Status /= Closed then
+			declare
+				Result : C.signed_int;
+			begin
+				Result := NC_Stream.Finalize (NC_Stream.Z_Stream'Access);
+				if Result /= C.zlib.Z_OK and then Raise_On_Error then
+					Raise_Error (Result);
+				end if;
+			end;
+			NC_Stream.Status := Closed;
 		end if;
-	end Internal_Inflate_End;
+	end Close;
 	
 	-- implementation
 	
@@ -399,25 +398,19 @@ package body zlib is
 		
 		overriding procedure Finalize (Object : in out Stream) is
 		begin
-			case Object.Data.Status is
-				when Closed =>
-					null;
-				when Deflating =>
-					Internal_Deflate_End (Object.Data.Z_Stream'Access);
-					Object.Data.Status := Closed;
-				when Inflating =>
-					Internal_Inflate_End (Object.Data.Z_Stream'Access);
-					Object.Data.Status := Closed;
-			end case;
-		exception
-			when others => null;
+			Close (Object.Data, Raise_On_Error => False);
 		end Finalize;
 		
 	end Primitives;
 	
 	-- compatibility
 	
-	procedure Close (Filter : in out Filter_Type) renames Finalize;
+	procedure Close (Filter : in out Filter_Type) is
+		NC_Filter : Non_Controlled_Stream
+			renames Reference (Filter).all;
+	begin
+		Close (NC_Filter, Raise_On_Error => True);
+	end Close;
 	
 	procedure Deflate_Init (
 		Filter : in out Filter_Type;
