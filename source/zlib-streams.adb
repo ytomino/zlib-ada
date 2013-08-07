@@ -87,7 +87,7 @@ package body zlib.Streams is
 	begin
 		if Object.Direction /= Reading then
 			raise Status_Error;
-		elsif End_Of (Object.Raw) then
+		elsif Reference (Object.Raw).Stream_End then
 			Last := Item'First - 1;
 		else
 			declare
@@ -103,7 +103,7 @@ package body zlib.Streams is
 							Object.In_Buffer,
 							Object.In_Last);
 						Object.In_First := Object.In_Buffer'First;
-						if Status (Object.Raw) = Deflating then
+						if Reference (Object.Raw).Status = Deflating then
 							Finish := Finish
 								or else Object.In_Last < Object.In_Buffer'Last;
 						end if;

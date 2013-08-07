@@ -55,7 +55,7 @@ package body zlib is
 	end Make_Window_Bits;
 	
 	procedure Internal_Deflate_Init (
-		Z_Stream : not null access C.zlib.z_stream;
+		Stream : in out zlib.Stream;
 		Level : in Compression_Level;
 		Method : in Compression_Method;
 		Window_Bits : in zlib.Window_Bits;
@@ -63,13 +63,15 @@ package body zlib is
 		Memory_Level : in zlib.Memory_Level;
 		Strategy : in zlib.Strategy)
 	is
+		NC_Stream : Non_Controlled_Stream
+			renames Reference (Stream).all;
 		Result : C.signed_int;
 	begin
-		Z_Stream.zalloc := null;
-		Z_Stream.zfree := null;
-		Z_Stream.opaque := System.Null_Address;
+		NC_Stream.Z_Stream.zalloc := null;
+		NC_Stream.Z_Stream.zfree := null;
+		NC_Stream.Z_Stream.opaque := System.Null_Address;
 		Result := C.zlib.deflateInit2q (
-			Z_Stream,
+			NC_Stream.Z_Stream'Access,
 			level => Compression_Level'Enum_Rep (Level),
 			method => Compression_Method'Enum_Rep (Method),
 			windowBits => Make_Window_Bits (Window_Bits, Header),
@@ -80,6 +82,8 @@ package body zlib is
 		if Result /= C.zlib.Z_OK then
 			Raise_Error (Result);
 		end if;
+		NC_Stream.Status := Deflating;
+		NC_Stream.Stream_End := False;
 	end Internal_Deflate_Init;
 	
 	procedure Internal_Deflate_End (
@@ -93,23 +97,27 @@ package body zlib is
 	end Internal_Deflate_End;
 	
 	procedure Internal_Inflate_Init (
-		Z_Stream : not null access C.zlib.z_stream;
+		Stream : in out zlib.Stream;
 		Window_Bits : in zlib.Window_Bits;
 		Header : in Inflation_Header)
 	is
+		NC_Stream : Non_Controlled_Stream
+			renames Reference (Stream).all;
 		Result : C.signed_int;
 	begin
-		Z_Stream.zalloc := null;
-		Z_Stream.zfree := null;
-		Z_Stream.opaque := System.Null_Address;
+		NC_Stream.Z_Stream.zalloc := null;
+		NC_Stream.Z_Stream.zfree := null;
+		NC_Stream.Z_Stream.opaque := System.Null_Address;
 		Result := C.zlib.inflateInit2q (
-			Z_Stream,
+			NC_Stream.Z_Stream'Access,
 			windowBits => Make_Window_Bits (Window_Bits, Header),
 			version => C.zlib.ZLIB_VERSION (C.zlib.ZLIB_VERSION'First)'Access,
 			stream_size => C.zlib.z_stream'Size / Standard'Storage_Unit);
 		if Result /= C.zlib.Z_OK then
 			Raise_Error (Result);
 		end if;
+		NC_Stream.Status := Inflating;
+		NC_Stream.Stream_End := False;
 	end Internal_Inflate_Init;
 	
 	procedure Internal_Inflate_End (
@@ -131,13 +139,17 @@ package body zlib is
 		Out_Item : out Ada.Streams.Stream_Element_Array;
 		Out_Last : out Ada.Streams.Stream_Element_Offset;
 		Finish : in Boolean;
-		Finished : out Boolean) is
+		Finished : out Boolean)
+	is
+		NC_Stream : Non_Controlled_Stream
+			renames Reference (Stream).all;
 	begin
-		if Status (Stream) /= Deflating then
+		if NC_Stream.Status /= Deflating then
 			raise Status_Error;
 		else
 			declare
-				Z_Stream : constant not null access C.zlib.z_stream := Z (Stream);
+				Z_Stream : constant not null access C.zlib.z_stream :=
+					NC_Stream.Z_Stream'Access;
 				C_In_Size : constant C.size_t := In_Item'Length;
 				C_In_Item : unsigned_char_array (0 .. C_In_Size - 1);
 				for C_In_Item'Address use In_Item'Address;
@@ -163,7 +175,7 @@ package body zlib is
 							- 1;
 						Finished := Result = C.zlib.Z_STREAM_END;
 						if Finished then
-							Set_End (Stream);
+							NC_Stream.Stream_End := True;
 						end if;
 					when others =>
 						Raise_Error (Result);
@@ -221,9 +233,8 @@ package body zlib is
 		return Stream is
 	begin
 		return Result : Stream do
-			Set_Start (Result, Deflating);
 			Internal_Deflate_Init (
-				Z (Result),
+				Result,
 				Level,
 				Method,
 				Window_Bits,
@@ -240,9 +251,12 @@ package body zlib is
 		Out_Item : out Ada.Streams.Stream_Element_Array;
 		Out_Last : out Ada.Streams.Stream_Element_Offset;
 		Finish : in Boolean;
-		Finished : out Boolean) is
+		Finished : out Boolean)
+	is
+		NC_Stream : Non_Controlled_Stream
+			renames Reference (Stream).all;
 	begin
-		case Status (Stream) is
+		case NC_Stream.Status is
 			when Closed =>
 				raise Status_Error;
 			when Deflating =>
@@ -273,13 +287,17 @@ package body zlib is
 		Out_Item : out Ada.Streams.Stream_Element_Array;
 		Out_Last : out Ada.Streams.Stream_Element_Offset;
 		Finish : in Boolean;
-		Finished : out Boolean) is
+		Finished : out Boolean)
+	is
+		NC_Stream : Non_Controlled_Stream
+			renames Reference (Stream).all;
 	begin
-		if Status (Stream) /= Inflating then
+		if NC_Stream.Status /= Inflating then
 			raise Status_Error;
 		else
 			declare
-				Z_Stream : constant not null access C.zlib.z_stream := Z (Stream);
+				Z_Stream : constant not null access C.zlib.z_stream :=
+					NC_Stream.Z_Stream'Access;
 				C_In_Size : constant C.size_t := In_Item'Length;
 				C_In_Item : unsigned_char_array (0 .. C_In_Size - 1);
 				for C_In_Item'Address use In_Item'Address;
@@ -305,7 +323,7 @@ package body zlib is
 							- 1;
 						Finished := Result = C.zlib.Z_STREAM_END;
 						if Finished then
-							Set_End (Stream);
+							NC_Stream.Stream_End := True;
 						end if;
 					when others =>
 						Raise_Error (Result);
@@ -340,24 +358,29 @@ package body zlib is
 		return Stream is
 	begin
 		return Result : Stream do
-			Set_Start (Result, Inflating);
 			Internal_Inflate_Init (
-				Z (Result),
+				Result,
 				Window_Bits,
 				Header);
 		end return;
 	end Inflate_Init;
 	
 	function Total_In (Stream : zlib.Stream)
-		return Ada.Streams.Stream_Element_Count is
+		return Ada.Streams.Stream_Element_Count
+	is
+		NC_Stream : Non_Controlled_Stream
+			renames Reference (Stream).all;
 	begin
-		return Ada.Streams.Stream_Element_Count (Z (Stream).total_in);
+		return Ada.Streams.Stream_Element_Count (NC_Stream.Z_Stream.total_in);
 	end Total_In;
 	
 	function Total_Out (Stream : zlib.Stream)
-		return Ada.Streams.Stream_Element_Count is
+		return Ada.Streams.Stream_Element_Count
+	is
+		NC_Stream : Non_Controlled_Stream
+			renames Reference (Stream).all;
 	begin
-		return Ada.Streams.Stream_Element_Count (Z (Stream).total_out);
+		return Ada.Streams.Stream_Element_Count (NC_Stream.Z_Stream.total_out);
 	end Total_Out;
 	
 	function Version return String is
@@ -367,44 +390,24 @@ package body zlib is
 	
 	package body Primitives is
 		
-		function Z (Object : Stream) return not null access C.zlib.z_stream is
+		function Reference (Object : Stream)
+			return not null access Non_Controlled_Stream is
 		begin
-			return Object.Z_Stream'Unrestricted_Access;
+			return Object.Data'Unrestricted_Access;
 			-- Object parameter shold be "aliased" in Ada 2012
-		end Z;
-		
-		function Status (Object : Stream) return Status_Type is
-		begin
-			return Object.Status;
-		end Status;
-		
-		function End_Of (Object : Stream) return Boolean is
-		begin
-			return Object.Stream_End;
-		end End_Of;
-		
-		procedure Set_Start (Object : in out Stream; Status : in Status_Type) is
-		begin
-			Object.Status := Status;
-			Object.Stream_End := False;
-		end Set_Start;
-		
-		procedure Set_End (Object : in out Stream) is
-		begin
-			Object.Stream_End := True;
-		end Set_End;
+		end Reference;
 		
 		overriding procedure Finalize (Object : in out Stream) is
 		begin
-			case Object.Status is
+			case Object.Data.Status is
 				when Closed =>
 					null;
 				when Deflating =>
-					Internal_Deflate_End (Object.Z_Stream'Access);
-					Object.Status := Closed;
+					Internal_Deflate_End (Object.Data.Z_Stream'Access);
+					Object.Data.Status := Closed;
 				when Inflating =>
-					Internal_Inflate_End (Object.Z_Stream'Access);
-					Object.Status := Closed;
+					Internal_Inflate_End (Object.Data.Z_Stream'Access);
+					Object.Data.Status := Closed;
 			end case;
 		exception
 			when others => null;
@@ -423,14 +426,16 @@ package body zlib is
 		Window_Bits : in zlib.Window_Bits := Default_Window_Bits;
 		Header : in Deflation_Header := Default;
 		Memory_Level : in zlib.Memory_Level := Default_Memory_Level;
-		Strategy : in Strategy_Type := Default_Strategy) is
+		Strategy : in Strategy_Type := Default_Strategy)
+	is
+		NC_Filter : Non_Controlled_Stream
+			renames Reference (Filter).all;
 	begin
-		if Status (Filter) /= Closed then
+		if NC_Filter.Status /= Closed then
 			raise Status_Error;
 		else
-			Set_Start (Filter, Deflating);
 			Internal_Deflate_Init (
-				Z (Filter),
+				Filter,
 				Level,
 				Method,
 				Window_Bits,
@@ -441,6 +446,8 @@ package body zlib is
 	end Deflate_Init;
 	
 	procedure Generic_Translate (Filter : in out Filter_Type) is
+		NC_Filter : Non_Controlled_Stream
+			renames Reference (Filter).all;
 		In_Item : Ada.Streams.Stream_Element_Array (1 .. 2 ** 15);
 		In_First : Ada.Streams.Stream_Element_Offset := In_Item'Last + 1;
 		In_Last : Ada.Streams.Stream_Element_Offset;
@@ -461,7 +468,7 @@ package body zlib is
 				Out_Last,
 				In_Last < In_Item'Last);
 			Data_Out (Out_Item (Out_Item'First .. Out_Last));
-			exit when End_Of (Filter);
+			exit when NC_Filter.Stream_End;
 			In_First := In_Used + 1;
 		end loop;
 	end Generic_Translate;
@@ -469,14 +476,16 @@ package body zlib is
 	procedure Inflate_Init (
 		Filter : in out Filter_Type;
 		Window_Bits : in zlib.Window_Bits := Default_Window_Bits;
-		Header : in Header_Type := Auto) is
+		Header : in Header_Type := Auto)
+	is
+		NC_Filter : Non_Controlled_Stream
+			renames Reference (Filter).all;
 	begin
-		if Status (Filter) /= Closed then
+		if NC_Filter.Status /= Closed then
 			raise Status_Error;
 		else
-			Set_Start (Filter, Inflating);
 			Internal_Inflate_Init (
-				Z (Filter),
+				Filter,
 				Window_Bits,
 				Header);
 		end if;
@@ -486,9 +495,12 @@ package body zlib is
 		Filter : in out Filter_Type;
 		Item : out Ada.Streams.Stream_Element_Array;
 		Last : out Ada.Streams.Stream_Element_Offset;
-		Flush : in Flush_Mode := No_Flush) is
+		Flush : in Flush_Mode := No_Flush)
+	is
+		NC_Filter : Non_Controlled_Stream
+			renames Reference (Filter).all;
 	begin
-		if End_Of (Filter) then
+		if NC_Filter.Stream_End then
 			Last := Item'First - 1;
 		else
 			declare
@@ -500,7 +512,7 @@ package body zlib is
 					if Rest_First > Rest_Last then
 						Read (Buffer, Rest_Last);
 						Rest_First := Buffer'First;
-						if Status (Filter) = Deflating then
+						if NC_Filter.Status = Deflating then
 							Finish := Finish or else Rest_Last < Buffer'Last;
 						end if;
 					end if;
@@ -512,7 +524,7 @@ package body zlib is
 						Last,
 						Finish);
 					Rest_First := In_Used + 1;
-					exit when End_Of (Filter) or else Last >= Item'Last;
+					exit when NC_Filter.Stream_End or else Last >= Item'Last;
 					Out_First := Last + 1;
 				end loop;
 			end;
@@ -542,7 +554,10 @@ package body zlib is
 	procedure Write (
 		Filter : in out Filter_Type;
 		Item : in Ada.Streams.Stream_Element_Array;
-		Flush : in Flush_Mode := No_Flush) is
+		Flush : in Flush_Mode := No_Flush)
+	is
+		NC_Filter : Non_Controlled_Stream
+			renames Reference (Filter).all;
 	begin
 		if Flush or Item'First <= Item'Last then
 			declare
@@ -560,7 +575,7 @@ package body zlib is
 						Out_Last,
 						Flush);
 					Write (Out_Item (Out_Item'First .. Out_Last));
-					exit when End_Of (Filter) or else In_Used >= Item'Last;
+					exit when NC_Filter.Stream_End or else In_Used >= Item'Last;
 					In_First := In_Used + 1;
 				end loop;
 			end;

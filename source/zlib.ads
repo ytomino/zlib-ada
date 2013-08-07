@@ -189,30 +189,27 @@ private
 	type Status_Type is (Closed, Deflating, Inflating);
 	pragma Discard_Names (Status_Type);
 	
+	type Non_Controlled_Stream is record
+		Z_Stream : aliased C.zlib.z_stream;
+		Status : Status_Type := Closed;
+		Stream_End : Boolean;
+	end record;
+	pragma Suppress_Initialization (Non_Controlled_Stream);
+	
 	package Primitives is
 		
 		type Stream is limited private;
 		
-		function Z (Object : Stream) return not null access C.zlib.z_stream;
-		pragma Inline (Z);
-		function Status (Object : Stream) return Status_Type;
-		pragma Inline (Status);
-		function End_Of (Object : Stream) return Boolean;
-		pragma Inline (End_Of);
-		
-		procedure Set_Start (Object : in out Stream; Status : in Status_Type);
-		pragma Inline (Set_Start);
-		procedure Set_End (Object : in out Stream);
-		pragma Inline (Set_End);
+		function Reference (Object : Stream)
+			return not null access Non_Controlled_Stream;
+		pragma Inline (Reference);
 		
 	private
 		
 		type Stream is
 			limited new Ada.Finalization.Limited_Controlled with
 		record
-			Z_Stream : aliased C.zlib.z_stream;
-			Status : Status_Type := Closed;
-			Stream_End : Boolean;
+			Data : aliased Non_Controlled_Stream;
 		end record;
 		
 		overriding procedure Finalize (Object : in out Stream);
