@@ -9,6 +9,7 @@
 --  we should provide thread safe allocation routines for the Z_Stream.
 --
 --  $Id: mtest.adb,v 1.4 2004/07/23 07:49:54 vagul Exp $
+--  modified by yt
 
 with ZLib;
 with Ada.Streams;
@@ -29,6 +30,21 @@ procedure MTest is
 
    package Random_Elements is
       new Ada.Numerics.Discrete_Random (Visible_Symbols);
+
+   protected Sync_Out is
+
+      procedure Put_Line (S : in String);
+
+   end Sync_Out;
+
+   protected body Sync_Out is
+
+      procedure Put_Line (S : in String) is
+      begin
+         Ada.Text_IO.Put_Line (S);
+      end Put_Line;
+
+   end Sync_Out;
 
    task type Test_Task;
 
@@ -126,7 +142,7 @@ procedure MTest is
                raise Program_Error;
             end if;
 
-            Ada.Text_IO.Put_Line
+            Sync_Out.Put_Line
               (Ada.Task_Identification.Image
                  (Ada.Task_Identification.Current_Task)
                & Stream_Element_Offset'Image (J)
@@ -140,7 +156,7 @@ procedure MTest is
       end loop Main;
    exception
       when E : others =>
-         Ada.Text_IO.Put_Line (Ada.Exceptions.Exception_Information (E));
+         Sync_Out.Put_Line (Ada.Exceptions.Exception_Information (E));
          Stop := True;
    end Test_Task;
 
