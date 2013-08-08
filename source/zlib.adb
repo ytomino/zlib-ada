@@ -333,6 +333,25 @@ package body zlib is
 	
 	procedure Inflate (
 		Stream : in out zlib.Stream;
+		In_Item : in Ada.Streams.Stream_Element_Array;
+		In_Last : out Ada.Streams.Stream_Element_Offset;
+		Out_Item : out Ada.Streams.Stream_Element_Array;
+		Out_Last : out Ada.Streams.Stream_Element_Offset)
+	is
+		Dummy_Finished : Boolean;
+	begin
+		Inflate (
+			Stream,
+			In_Item,
+			In_Last,
+			Out_Item,
+			Out_Last,
+			False,
+			Dummy_Finished);
+	end Inflate;
+	
+	procedure Inflate (
+		Stream : in out zlib.Stream;
 		Out_Item : out Ada.Streams.Stream_Element_Array;
 		Out_Last : out Ada.Streams.Stream_Element_Offset;
 		Finish : in Boolean;
