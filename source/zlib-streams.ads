@@ -34,8 +34,10 @@ package zlib.Streams is
 	type Stream_Access is access all Ada.Streams.Root_Stream_Type'Class;
 	subtype Stream_Type is Stream (Buffer_Length => 2 ** 15);
 	subtype Stream_Mode is Direction;
-	function Out_Stream return Stream_Mode renames Writing;
-	function In_Stream return Stream_Mode renames Reading;
+	function Out_Stream return Stream_Mode
+		renames Writing;
+	function In_Stream return Stream_Mode
+		renames Reading;
 	
 	procedure Create (
 		Stream : in out Streams.Stream'Class;

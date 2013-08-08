@@ -115,8 +115,10 @@ package zlib is
 	function Total_Out (Stream : zlib.Stream)
 		return Ada.Streams.Stream_Element_Count;
 	
-	Data_Error : exception renames Ada.IO_Exceptions.Data_Error;
-	Status_Error : exception renames Ada.IO_Exceptions.Status_Error;
+	Data_Error : exception
+		renames Ada.IO_Exceptions.Data_Error;
+	Status_Error : exception
+		renames Ada.IO_Exceptions.Status_Error;
 	
 	-- compatibility with ZLib.Ada.
 	
@@ -126,8 +128,10 @@ package zlib is
 	subtype Header_Type is Inflation_Header;
 	subtype Strategy_Type is Strategy;
 	subtype Flush_Mode is Boolean;
-	function No_Flush return Boolean renames False;
-	function Finish return Boolean renames True;
+	function No_Flush return Boolean
+		renames False;
+	function Finish return Boolean
+		renames True;
 	
 	procedure Deflate_Init (
 		Filter : in out Filter_Type;
