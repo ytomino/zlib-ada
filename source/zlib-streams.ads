@@ -1,3 +1,5 @@
+with Ada.Streams.Stream_IO;
+private with System;
 package zlib.Streams is
 	pragma Preelaborate;
 	use type Ada.Streams.Stream_Element_Offset;
@@ -50,14 +52,14 @@ package zlib.Streams is
 	
 	-- compatiblity with Zlib.Ada.
 	
-	type Stream_Access is access all Ada.Streams.Root_Stream_Type'Class;
+	subtype Stream_Access is Ada.Streams.Stream_IO.Stream_Access;
 	type Stream_Type is limited new Ada.Streams.Root_Stream_Type with private;
 	type Stream_Mode is (In_Stream, Out_Stream);
 	
 	procedure Create (
 		Stream : in out Stream_Type'Class;
 		Mode : in Stream_Mode;
-		Back : in Stream_Access;
+		Back : access Ada.Streams.Root_Stream_Type'Class;
 		Back_Compressed : in Boolean;
 		Level : in Compression_Level := Default_Compression;
 		Strategy : in Strategy_Type := Default_Strategy;
@@ -88,7 +90,7 @@ private
 	type Out_Type is
 		limited new Ada.Streams.Root_Stream_Type with
 	record
-		Stream : access Ada.Streams.Root_Stream_Type'Class;
+		Stream : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
 		Deflator : zlib.Stream;
 	end record;
 	
@@ -105,7 +107,7 @@ private
 	type In_Type (Buffer_Length : Ada.Streams.Stream_Element_Count) is
 		limited new Ada.Streams.Root_Stream_Type with
 	record
-		Stream : access Ada.Streams.Root_Stream_Type'Class;
+		Stream : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
 		Inflator : zlib.Stream;
 		In_First : Ada.Streams.Stream_Element_Offset;
 		In_Last : Ada.Streams.Stream_Element_Offset;
@@ -126,7 +128,7 @@ private
 		limited new Ada.Streams.Root_Stream_Type with
 	record
 		Direction : Stream_Mode;
-		Target : access Ada.Streams.Root_Stream_Type'Class;
+		Target : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
 		Raw : zlib.Stream;
 		In_Buffer : Ada.Streams.Stream_Element_Array (
 			1 ..

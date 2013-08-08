@@ -1,3 +1,4 @@
+with System.Address_To_Access_Conversions;
 package body zlib.Streams is
 	
 	generic
@@ -168,10 +169,12 @@ package body zlib.Streams is
 		Strategy : zlib.Strategy := Default_Strategy)
 		return Out_Type
 	is
-		pragma Suppress (Accessibility_Check);
+		package Conv is
+			new System.Address_To_Access_Conversions (
+				Ada.Streams.Root_Stream_Type'Class);
 	begin
 		return (Ada.Streams.Root_Stream_Type with
-			Stream => Stream,
+			Stream => Conv.To_Address (Conv.Object_Pointer (Stream)),
 			Deflator => Deflate_Init (
 				Level => Level,
 				Method => Method,
@@ -201,6 +204,9 @@ package body zlib.Streams is
 	end Stream;
 	
 	procedure Finish (Object : in out Out_Type) is
+		package Conv is
+			new System.Address_To_Access_Conversions (
+				Ada.Streams.Root_Stream_Type'Class);
 	begin
 		if not Is_Open (Object) then
 			raise Status_Error;
@@ -208,7 +214,7 @@ package body zlib.Streams is
 		declare
 			procedure Deflating_Finish is new Generic_Finish (Deflate);
 		begin
-			Deflating_Finish (Object.Stream, Object.Deflator);
+			Deflating_Finish (Conv.To_Pointer (Object.Stream), Object.Deflator);
 		end;
 	end Finish;
 	
@@ -224,9 +230,12 @@ package body zlib.Streams is
 		Object : in out Out_Type;
 		Item : in Ada.Streams.Stream_Element_Array)
 	is
+		package Conv is
+			new System.Address_To_Access_Conversions (
+				Ada.Streams.Root_Stream_Type'Class);
 		procedure Deflating_Write is new Generic_Write (Deflate);
 	begin
-		Deflating_Write (Object.Stream, Item, Object.Deflator);
+		Deflating_Write (Conv.To_Pointer (Object.Stream), Item, Object.Deflator);
 	end Write;
 	
 	-- only reading with inflation
@@ -239,11 +248,13 @@ package body zlib.Streams is
 			Default_Buffer_Length)
 		return In_Type
 	is
-		pragma Suppress (Accessibility_Check);
+		package Conv is
+			new System.Address_To_Access_Conversions (
+				Ada.Streams.Root_Stream_Type'Class);
 	begin
 		return (Ada.Streams.Root_Stream_Type with
 			Buffer_Length => Buffer_Length,
-			Stream => Stream,
+			Stream => Conv.To_Address (Conv.Object_Pointer (Stream)),
 			Inflator => Inflate_Init (
 				Window_Bits => Window_Bits,
 				Header => Header),
@@ -276,10 +287,13 @@ package body zlib.Streams is
 		Item : out Ada.Streams.Stream_Element_Array;
 		Last : out Ada.Streams.Stream_Element_Offset)
 	is
+		package Conv is
+			new System.Address_To_Access_Conversions (
+				Ada.Streams.Root_Stream_Type'Class);
 		procedure Deflating_Read is new Generic_Read (Inflate);
 	begin
 		Deflating_Read (
-			Object.Stream,
+			Conv.To_Pointer (Object.Stream),
 			Item,
 			Last,
 			Object.Inflator,
@@ -300,14 +314,18 @@ package body zlib.Streams is
 	procedure Create (
 		Stream : in out Stream_Type'Class;
 		Mode : in Stream_Mode;
-		Back : in Stream_Access;
+		Back : access Ada.Streams.Root_Stream_Type'Class;
 		Back_Compressed : in Boolean;
 		Level : in Compression_Level := Default_Compression;
 		Strategy : in Strategy_Type := Default_Strategy;
-		Header : in Header_Type := Default) is
+		Header : in Header_Type := Default)
+	is
+		package Conv is
+			new System.Address_To_Access_Conversions (
+				Ada.Streams.Root_Stream_Type'Class);
 	begin
 		Stream.Direction := Mode;
-		Stream.Target := Back;
+		Stream.Target := Conv.To_Address (Conv.Object_Pointer (Back));
 		Stream.In_First := 0;
 		Stream.In_Last := -1;
 		if (Mode = Out_Stream) = Back_Compressed then
@@ -335,7 +353,11 @@ package body zlib.Streams is
 	
 	procedure Flush (
 		Stream : in out Stream_Type'Class;
-		Mode : in Flush_Mode) is
+		Mode : in Flush_Mode)
+	is
+		package Conv is
+			new System.Address_To_Access_Conversions (
+				Ada.Streams.Root_Stream_Type'Class);
 	begin
 		if not Is_Open (Stream) then
 			raise Status_Error;
@@ -344,7 +366,7 @@ package body zlib.Streams is
 			declare
 				procedure DI_Finish is new Generic_Finish (Deflate_Or_Inflate);
 			begin
-				DI_Finish (Stream.Target, Stream.Raw);
+				DI_Finish (Conv.To_Pointer (Stream.Target), Stream.Raw);
 			end;
 		end if;
 	end Flush;
@@ -368,7 +390,11 @@ package body zlib.Streams is
 	overriding procedure Read (
 		Object : in out Stream_Type;
 		Item : out Ada.Streams.Stream_Element_Array;
-		Last : out Ada.Streams.Stream_Element_Offset) is
+		Last : out Ada.Streams.Stream_Element_Offset)
+	is
+		package Conv is
+			new System.Address_To_Access_Conversions (
+				Ada.Streams.Root_Stream_Type'Class);
 	begin
 		if not Is_Open (Object) or else Object.Direction = Out_Stream then
 			raise Status_Error;
@@ -377,7 +403,7 @@ package body zlib.Streams is
 			procedure DI_Read is new Generic_Read (Deflate_Or_Inflate);
 		begin
 			DI_Read (
-				Object.Target,
+				Conv.To_Pointer (Object.Target),
 				Item,
 				Last,
 				Object.Raw,
@@ -389,7 +415,11 @@ package body zlib.Streams is
 	
 	overriding procedure Write (
 		Object : in out Stream_Type;
-		Item : in Ada.Streams.Stream_Element_Array) is
+		Item : in Ada.Streams.Stream_Element_Array)
+	is
+		package Conv is
+			new System.Address_To_Access_Conversions (
+				Ada.Streams.Root_Stream_Type'Class);
 	begin
 		if not Is_Open (Object) or else Object.Direction = In_Stream then
 			raise Status_Error;
@@ -397,7 +427,7 @@ package body zlib.Streams is
 		declare
 			procedure DI_Write is new Generic_Write (Deflate_Or_Inflate);
 		begin
-			DI_Write (Object.Target, Item, Object.Raw);
+			DI_Write (Conv.To_Pointer (Object.Target), Item, Object.Raw);
 		end;
 	end Write;
 	
