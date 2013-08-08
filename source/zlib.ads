@@ -108,6 +108,8 @@ package zlib is
 		Finish : in Boolean;
 		Finished : out Boolean);
 	
+	procedure Close (Stream : zlib.Stream);
+	
 	function Total_In (Stream : zlib.Stream)
 		return Ada.Streams.Stream_Element_Count;
 	function Total_Out (Stream : zlib.Stream)
@@ -140,8 +142,6 @@ package zlib is
 		Filter : in out Filter_Type;
 		Window_Bits : in zlib.Window_Bits := Default_Window_Bits;
 		Header : in Header_Type := Auto);
-	
-	procedure Close (Filter : in out Filter_Type);
 	
 	procedure Translate (
 		Filter : in out Filter_Type;

@@ -55,6 +55,11 @@ package body zlib.Streams is
 			In_Last => -1);
 	end Create_Inflation;
 	
+	procedure Close (Object : in out Stream) is
+	begin
+		Close (Object.Raw);
+	end Close;
+	
 	procedure Finish (Object : in out Stream) is
 		Dummy_In_Item : Ada.Streams.Stream_Element_Array (1 .. 0);
 		Dummy_In_Used : Ada.Streams.Stream_Element_Offset;
@@ -158,11 +163,6 @@ package body zlib.Streams is
 	end Write;
 	
 	-- compatibility
-	
-	procedure Close (Stream : in out Streams.Stream'Class) is
-	begin
-		Close (Stream.Raw);
-	end Close;
 	
 	procedure Create (
 		Stream : in out Streams.Stream'Class;

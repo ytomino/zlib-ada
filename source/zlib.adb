@@ -364,6 +364,13 @@ package body zlib is
 		end return;
 	end Inflate_Init;
 	
+	procedure Close (Stream : zlib.Stream) is
+		NC_Stream : Non_Controlled_Stream
+			renames Reference (Stream).all;
+	begin
+		Close (NC_Stream, Raise_On_Error => True);
+	end Close;
+	
 	function Total_In (Stream : zlib.Stream)
 		return Ada.Streams.Stream_Element_Count
 	is
@@ -404,13 +411,6 @@ package body zlib is
 	end Primitives;
 	
 	-- compatibility
-	
-	procedure Close (Filter : in out Filter_Type) is
-		NC_Filter : Non_Controlled_Stream
-			renames Reference (Filter).all;
-	begin
-		Close (NC_Filter, Raise_On_Error => True);
-	end Close;
 	
 	procedure Deflate_Init (
 		Filter : in out Filter_Type;

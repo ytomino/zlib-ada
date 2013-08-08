@@ -25,6 +25,8 @@ package zlib.Streams is
 		Header : Inflation_Header := Auto)
 		return Stream;
 	
+	procedure Close (Object : in out Stream);
+	
 	procedure Finish (Object : in out Stream);
 	
 	-- compatiblity with Zlib.Ada.
@@ -47,8 +49,6 @@ package zlib.Streams is
 	procedure Flush (
 		Stream : in out Streams.Stream'Class;
 		Mode : in Flush_Mode);
-	
-	procedure Close (Stream : in out Streams.Stream'Class);
 	
 	function Read_Total_In (Stream : Streams.Stream'Class) return Count;
 	function Read_Total_Out (Stream : Streams.Stream'Class) return Count;
