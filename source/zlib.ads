@@ -207,7 +207,7 @@ private
 	type Non_Controlled_Stream is record
 		Z_Stream : aliased C.zlib.z_stream;
 		Finalize : Finalize_Type;
-		Status : Status_Type := Closed;
+		Status : Status_Type;
 		Stream_End : Boolean;
 	end record;
 	pragma Suppress_Initialization (Non_Controlled_Stream);
@@ -225,7 +225,9 @@ private
 		type Stream is
 			limited new Ada.Finalization.Limited_Controlled with
 		record
-			Data : aliased Non_Controlled_Stream;
+			Data : aliased Non_Controlled_Stream := (
+				Status => Closed,
+				others => <>);
 		end record;
 		
 		overriding procedure Finalize (Object : in out Stream);
