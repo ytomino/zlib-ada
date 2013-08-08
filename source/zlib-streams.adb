@@ -188,7 +188,7 @@ package body zlib.Streams is
 	
 	function Is_Open (Object : Out_Type) return Boolean is
 	begin
-		return Object.Stream /= null;
+		return Is_Open (Object.Deflator);
 	end Is_Open;
 	
 	function Stream (Object : Out_Type)
@@ -259,7 +259,7 @@ package body zlib.Streams is
 	
 	function Is_Open (Object : In_Type) return Boolean is
 	begin
-		return Object.Stream /= null;
+		return Is_Open (Object.Inflator);
 	end Is_Open;
 	
 	function Stream (Object : In_Type)
@@ -330,7 +330,7 @@ package body zlib.Streams is
 	
 	function Is_Open (Object : Stream_Type'Class) return Boolean is
 	begin
-		return Object.Target /= null;
+		return Is_Open (Object.Raw);
 	end Is_Open;
 	
 	procedure Flush (

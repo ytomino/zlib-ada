@@ -117,6 +117,8 @@ package zlib is
 	
 	procedure Close (Stream : zlib.Stream);
 	
+	function Is_Open (Stream : zlib.Stream) return Boolean;
+	
 	function Total_In (Stream : zlib.Stream)
 		return Ada.Streams.Stream_Element_Count;
 	function Total_Out (Stream : zlib.Stream)

@@ -390,6 +390,13 @@ package body zlib is
 		Close (NC_Stream, Raise_On_Error => True);
 	end Close;
 	
+	function Is_Open (Stream : zlib.Stream) return Boolean is
+		NC_Stream : Non_Controlled_Stream
+			renames Reference (Stream).all;
+	begin
+		return NC_Stream.Status /= Closed;
+	end Is_Open;
+	
 	function Total_In (Stream : zlib.Stream)
 		return Ada.Streams.Stream_Element_Count
 	is
