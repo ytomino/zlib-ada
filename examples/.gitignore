@@ -1,5 +1,5 @@
-/build*
-/import*
+/*.build/
+/bin
 /test_di.gz
 /testzlib.in
 /testzlib.out
