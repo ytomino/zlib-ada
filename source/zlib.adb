@@ -69,7 +69,7 @@ package body zlib is
 	begin
 		NC_Stream.Z_Stream.zalloc := null;
 		NC_Stream.Z_Stream.zfree := null;
-		NC_Stream.Z_Stream.opaque := System.Null_Address;
+		NC_Stream.Z_Stream.opaque := C.void_ptr (System.Null_Address);
 		Result := C.zlib.deflateInit2q (
 			NC_Stream.Z_Stream'Access,
 			level => Compression_Level'Enum_Rep (Level),
@@ -98,7 +98,7 @@ package body zlib is
 	begin
 		NC_Stream.Z_Stream.zalloc := null;
 		NC_Stream.Z_Stream.zfree := null;
-		NC_Stream.Z_Stream.opaque := System.Null_Address;
+		NC_Stream.Z_Stream.opaque := C.void_ptr (System.Null_Address);
 		Result := C.zlib.inflateInit2q (
 			NC_Stream.Z_Stream'Access,
 			windowBits => Make_Window_Bits (Window_Bits, Header),
