@@ -8,16 +8,24 @@ VERSION=$(shell gcc -dumpversion)
 BUILDDIR=$(TARGET).build
 
 ifeq ($(TARGET),$(HOST))
-GNATMAKE=gnatmake
-GCC=$(dir $(shell which $(GNATMAKE)))gcc
+GNATPREFIX=
+GCC=
 BINLN=bin
 else
-GNATMAKE=$(TARGET)-gnatmake
+GNATPREFIX=$(TARGET)-
 GCC=$(TARGET)-gcc
 BINLN=
+endif
+
+GFLAGS=
+CFLAGS=-ggdb -pipe -gnatef -gnata -gnatwa -gnatyy-3chbs
+MFLAGS=-D $(BUILDDIR)
+BFLAGS=-E
+LFLAGS=-ggdb
+HFLAGS=
+
 ifneq ($(findstring freebsd,$(TARGET)),)
 LFLAGS=-lm -lpthread
-endif
 endif
 
 ifneq ($(DRAKE_RTSROOT),)
@@ -25,30 +33,36 @@ DRAKE_RTSDIR=$(DRAKE_RTSROOT)/$(TARGET)/$(VERSION)
 endif
 ifneq ($(DRAKE_RTSDIR),)
 IMPORTDIR=
-MFLAGS=--RTS=$(abspath $(DRAKE_RTSDIR))
+GFLAGS+=--RTS=$(abspath $(DRAKE_RTSDIR))
 else
 IMPORTDIR=$(BUILDDIR)/import
-MFLAGS=-I$(abspath $(IMPORTDIR))
+MFLAGS+=-I$(IMPORTDIR)
+endif
+
+ifneq ($(GCC),)
+GFLAGS+=$(filter -m32 -m64,$(GCC))
+MFLAGS+=--GCC="$(GCC)"
+LFLAGS+=--GCC="$(GCC)"
+HFLAGS+=-gcc="$(GCC)"
 endif
 
 EXAMPLES=$(basename $(filter-out b~%,$(wildcard *.adb)))
 
-CFLAGS=-gnata -gnatwa -gnatyy-3chbs
+OFFICIAL_DEMO:=$(notdir $(basename $(wildcard official-demo/*.adb)))
 
-OFFICIAL_DEMO:=$(addprefix $(BUILDDIR)/,$(notdir $(basename $(wildcard official-demo/*.adb))))
-ifneq ($(DRAKE),)
-OFFICIAL_DEMO:=$(filter-out $(BUILDDIR)/mtest,$(OFFICIAL_DEMO))
-endif
+.PHONY: all clean $(EXAMPLES) $(OFFICIAL_DEMO)
 
-.PHONY: all clean $(EXAMPLES)
-
-all: $(BUILDDIR)/str $(BUILDDIR)/stream $(BUILDDIR)/test_di $(BUILDDIR)/version $(OFFICIAL_DEMO) $(BINLN)
+all: $(EXAMPLES) $(OFFICIAL_DEMO)
 
 $(BUILDDIR)/%: %.adb $(BUILDDIR) $(IMPORTDIR) $(wildcard $(SOURCEDIR)/*)
-	cd $(BUILDDIR) && $(GNATMAKE) -g $(MFLAGS) -I../$(SOURCEDIR) $(CFLAGS) ../$< -largs $(LFLAGS)
+	$(GNATPREFIX)gnatmake -c -I$(SOURCEDIR) $< $(GFLAGS) $(MFLAGS) -cargs $(CFLAGS)
+	cd $(BUILDDIR) && $(GNATPREFIX)gnatmake -b $(basename $(notdir $<)).ali $(GFLAGS) -bargs $(BFLAGS)
+	cd $(BUILDDIR) && $(GNATPREFIX)gnatlink -o ../$@ $(basename $(notdir $<)).ali $(GFLAGS) $(LFLAGS)
 
-$(OFFICIAL_DEMO): $(BUILDDIR)/%: official-demo/%.adb $(BUILDDIR) $(IMPORTDIR) $(wildcard $(SOURCEDIR)/*)
-	cd $(BUILDDIR) && $(GNATMAKE) -g $(MFLAGS) -I../$(SOURCEDIR) ../$< -largs $(LFLAGS)
+$(BUILDDIR)/%: official-demo/%.adb $(BUILDDIR) $(IMPORTDIR) $(wildcard $(SOURCEDIR)/*)
+	$(GNATPREFIX)gnatmake -c -I$(SOURCEDIR) $< $(GFLAGS) $(MFLAGS) -cargs $(CFLAGS) -gnatwA -gnatyN
+	cd $(BUILDDIR) && $(GNATPREFIX)gnatmake -b $(basename $(notdir $<)).ali $(GFLAGS) -bargs $(BFLAGS)
+	cd $(BUILDDIR) && $(GNATPREFIX)gnatlink -o ../$@ $(basename $(notdir $<)).ali $(GFLAGS) $(LFLAGS)
 
 $(BUILDDIR):
 	mkdir $(BUILDDIR)
@@ -56,11 +70,13 @@ $(BUILDDIR):
 $(BINLN): $(BUILDDIR)
 	ln -s $(BUILDDIR) $(BINLN)
 
-$(EXAMPLES): %: $(BUILDDIR)/%
+$(EXAMPLES): %: $(BUILDDIR)/% $(BINLN)
+$(OFFICIAL_DEMO): %: $(BUILDDIR)/% $(BINLN)
 
 ifneq ($(IMPORTDIR),)
 $(IMPORTDIR): $(SOURCEDIR)/import.h
-	headmaster --to ada -gcc=$(GCC) $(addprefix -isystem ,$(INCDIR)) -p -D $(IMPORTDIR) $+
+	headmaster --to ada $(HFLAGS) -p -D $@ $+
+	touch $@
 endif
 
 clean:
