@@ -124,10 +124,10 @@ package zlib is
 	function Total_Out (Stream : zlib.Stream)
 		return Ada.Streams.Stream_Element_Count;
 	
-	Data_Error : exception
-		renames Ada.IO_Exceptions.Data_Error;
 	Status_Error : exception
 		renames Ada.IO_Exceptions.Status_Error;
+	Data_Error : exception
+		renames Ada.IO_Exceptions.Data_Error;
 	
 	-- compatibility with ZLib.Ada.
 	
