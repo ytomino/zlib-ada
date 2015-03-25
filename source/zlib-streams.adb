@@ -194,7 +194,7 @@ package body zlib.Streams is
 		return Is_Open (Object.Deflator);
 	end Is_Open;
 	
-	function Stream (Object : Out_Type)
+	function Stream (Object : in out Out_Type)
 		return not null access Ada.Streams.Root_Stream_Type'Class is
 	begin
 		if not Is_Open (Object) then
@@ -273,7 +273,7 @@ package body zlib.Streams is
 		return Is_Open (Object.Inflator);
 	end Is_Open;
 	
-	function Stream (Object : In_Type)
+	function Stream (Object : in out In_Type)
 		return not null access Ada.Streams.Root_Stream_Type'Class is
 	begin
 		if not Is_Open (Object) then

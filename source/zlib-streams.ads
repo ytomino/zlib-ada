@@ -25,7 +25,7 @@ package zlib.Streams is
 	
 	function Is_Open (Object : Out_Type) return Boolean;
 	
-	function Stream (Object : Out_Type) -- aliased in out
+	function Stream (Object : in out Out_Type)
 		return not null access Ada.Streams.Root_Stream_Type'Class;
 	
 	procedure Finish (Object : in out Out_Type);
@@ -47,7 +47,7 @@ package zlib.Streams is
 	
 	function Is_Open (Object : In_Type) return Boolean;
 	
-	function Stream (Object : In_Type) -- aliased in out
+	function Stream (Object : in out In_Type)
 		return not null access Ada.Streams.Root_Stream_Type'Class;
 	
 	-- compatiblity with Zlib.Ada.
