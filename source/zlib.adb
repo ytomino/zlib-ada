@@ -383,7 +383,7 @@ package body zlib is
 		end return;
 	end Inflate_Init;
 	
-	procedure Close (Stream : zlib.Stream) is
+	procedure Close (Stream : in out zlib.Stream) is
 		NC_Stream : Non_Controlled_Stream
 			renames Reference (Stream).all;
 	begin
@@ -392,7 +392,7 @@ package body zlib is
 	
 	function Is_Open (Stream : zlib.Stream) return Boolean is
 		NC_Stream : Non_Controlled_Stream
-			renames Reference (Stream).all;
+			renames Constant_Reference (Stream).all;
 	begin
 		return NC_Stream.Status /= Closed;
 	end Is_Open;
@@ -401,7 +401,7 @@ package body zlib is
 		return Ada.Streams.Stream_Element_Count
 	is
 		NC_Stream : Non_Controlled_Stream
-			renames Reference (Stream).all;
+			renames Constant_Reference (Stream).all;
 	begin
 		return Ada.Streams.Stream_Element_Count (NC_Stream.Z_Stream.total_in);
 	end Total_In;
@@ -410,7 +410,7 @@ package body zlib is
 		return Ada.Streams.Stream_Element_Count
 	is
 		NC_Stream : Non_Controlled_Stream
-			renames Reference (Stream).all;
+			renames Constant_Reference (Stream).all;
 	begin
 		return Ada.Streams.Stream_Element_Count (NC_Stream.Z_Stream.total_out);
 	end Total_Out;
@@ -422,11 +422,16 @@ package body zlib is
 	
 	package body Primitives is
 		
-		function Reference (Object : Stream)
+		function Constant_Reference (Object : Stream)
+			return not null access constant Non_Controlled_Stream is
+		begin
+			return Object.Data'Unchecked_Access;
+		end Constant_Reference;
+		
+		function Reference (Object : in out Stream)
 			return not null access Non_Controlled_Stream is
 		begin
-			return Object.Data'Unrestricted_Access;
-			-- Object parameter shold be "aliased" in Ada 2012
+			return Object.Data'Unchecked_Access;
 		end Reference;
 		
 		overriding procedure Finalize (Object : in out Stream) is

@@ -115,7 +115,7 @@ package zlib is
 		Finish : in Boolean;
 		Finished : out Boolean);
 	
-	procedure Close (Stream : zlib.Stream);
+	procedure Close (Stream : in out zlib.Stream);
 	
 	function Is_Open (Stream : zlib.Stream) return Boolean;
 	
@@ -218,8 +218,12 @@ private
 		
 		type Stream is limited private;
 		
-		function Reference (Object : Stream)
+		function Constant_Reference (Object : Stream)
+			return not null access constant Non_Controlled_Stream;
+		function Reference (Object : in out Stream)
 			return not null access Non_Controlled_Stream;
+		
+		pragma Inline (Constant_Reference);
 		pragma Inline (Reference);
 		
 	private
