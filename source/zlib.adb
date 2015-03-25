@@ -83,7 +83,8 @@ package body zlib is
 			Raise_Error (Result);
 		end if;
 		NC_Stream.Finalize := C.zlib.deflateEnd'Access;
-		NC_Stream.Status := Deflating;
+		NC_Stream.Is_Open := True;
+		NC_Stream.Mode := Deflating;
 		NC_Stream.Stream_End := False;
 	end Internal_Deflate_Init;
 	
@@ -108,7 +109,8 @@ package body zlib is
 			Raise_Error (Result);
 		end if;
 		NC_Stream.Finalize := C.zlib.inflateEnd'Access;
-		NC_Stream.Status := Inflating;
+		NC_Stream.Is_Open := True;
+		NC_Stream.Mode := Inflating;
 		NC_Stream.Stream_End := False;
 	end Internal_Inflate_Init;
 	
@@ -116,7 +118,7 @@ package body zlib is
 		NC_Stream : in out Non_Controlled_Stream;
 		Raise_On_Error : Boolean) is
 	begin
-		if NC_Stream.Status /= Closed then
+		if NC_Stream.Is_Open then
 			declare
 				Result : C.signed_int;
 			begin
@@ -125,7 +127,7 @@ package body zlib is
 					Raise_Error (Result);
 				end if;
 			end;
-			NC_Stream.Status := Closed;
+			NC_Stream.Is_Open := False;
 		end if;
 	end Close;
 	
@@ -143,7 +145,7 @@ package body zlib is
 		NC_Stream : Non_Controlled_Stream
 			renames Reference (Stream).all;
 	begin
-		if NC_Stream.Status /= Deflating then
+		if not NC_Stream.Is_Open or else NC_Stream.Mode /= Deflating then
 			raise Status_Error;
 		else
 			declare
@@ -255,9 +257,10 @@ package body zlib is
 		NC_Stream : Non_Controlled_Stream
 			renames Reference (Stream).all;
 	begin
-		case NC_Stream.Status is
-			when Closed =>
-				raise Status_Error;
+		if not NC_Stream.Is_Open then
+			raise Status_Error;
+		end if;
+		case NC_Stream.Mode is
 			when Deflating =>
 				Deflate (
 					Stream,
@@ -291,7 +294,7 @@ package body zlib is
 		NC_Stream : Non_Controlled_Stream
 			renames Reference (Stream).all;
 	begin
-		if NC_Stream.Status /= Inflating then
+		if not NC_Stream.Is_Open or else NC_Stream.Mode /= Inflating then
 			raise Status_Error;
 		else
 			declare
@@ -394,8 +397,18 @@ package body zlib is
 		NC_Stream : Non_Controlled_Stream
 			renames Constant_Reference (Stream).all;
 	begin
-		return NC_Stream.Status /= Closed;
+		return NC_Stream.Is_Open;
 	end Is_Open;
+	
+	function Mode (Stream : zlib.Stream) return Stream_Mode is
+		NC_Stream : Non_Controlled_Stream
+			renames Constant_Reference (Stream).all;
+	begin
+		if not NC_Stream.Is_Open then
+			raise Status_Error;
+		end if;
+		return NC_Stream.Mode;
+	end Mode;
 	
 	function Total_In (Stream : zlib.Stream)
 		return Ada.Streams.Stream_Element_Count
@@ -455,7 +468,7 @@ package body zlib is
 		NC_Filter : Non_Controlled_Stream
 			renames Reference (Filter).all;
 	begin
-		if NC_Filter.Status /= Closed then
+		if NC_Filter.Is_Open then
 			raise Status_Error;
 		else
 			Internal_Deflate_Init (
@@ -505,7 +518,7 @@ package body zlib is
 		NC_Filter : Non_Controlled_Stream
 			renames Reference (Filter).all;
 	begin
-		if NC_Filter.Status /= Closed then
+		if NC_Filter.Is_Open then
 			raise Status_Error;
 		else
 			Internal_Inflate_Init (
@@ -536,7 +549,7 @@ package body zlib is
 					if Rest_First > Rest_Last then
 						Read (Buffer, Rest_Last);
 						Rest_First := Buffer'First;
-						if NC_Filter.Status = Deflating then
+						if NC_Filter.Mode = Deflating then
 							Finish := Finish or else Rest_Last < Buffer'Last;
 						end if;
 					end if;

@@ -9,6 +9,8 @@ package zlib is
 	
 	function Version return String;
 	
+	type Stream_Mode is (Deflating, Inflating);
+	
 	type Stream is limited private;
 	
 	-- level
@@ -118,6 +120,7 @@ package zlib is
 	procedure Close (Stream : in out zlib.Stream);
 	
 	function Is_Open (Stream : zlib.Stream) return Boolean;
+	function Mode (Stream : zlib.Stream) return Stream_Mode;
 	
 	function Total_In (Stream : zlib.Stream)
 		return Ada.Streams.Stream_Element_Count;
@@ -203,13 +206,11 @@ private
 		function (strm : access C.zlib.z_stream) return C.signed_int;
 	pragma Convention (C, Finalize_Type);
 	
-	type Status_Type is (Closed, Deflating, Inflating);
-	pragma Discard_Names (Status_Type);
-	
 	type Non_Controlled_Stream is record
 		Z_Stream : aliased C.zlib.z_stream;
 		Finalize : Finalize_Type;
-		Status : Status_Type;
+		Is_Open : Boolean;
+		Mode : Stream_Mode;
 		Stream_End : Boolean;
 	end record;
 	pragma Suppress_Initialization (Non_Controlled_Stream);
@@ -232,7 +233,7 @@ private
 			limited new Ada.Finalization.Limited_Controlled with
 		record
 			Data : aliased Non_Controlled_Stream := (
-				Status => Closed,
+				Is_Open => False,
 				others => <>);
 		end record;
 		
