@@ -115,19 +115,15 @@ package body zlib is
 	
 	procedure Close (
 		NC_Stream : in out Non_Controlled_Stream;
-		Raise_On_Error : Boolean) is
+		Raise_On_Error : Boolean)
+	is
+		Result : C.signed_int;
 	begin
-		if NC_Stream.Is_Open then
-			declare
-				Result : C.signed_int;
-			begin
-				Result := NC_Stream.Finalize (NC_Stream.Z_Stream'Access);
-				if Result /= C.zlib.Z_OK and then Raise_On_Error then
-					Raise_Error (Result);
-				end if;
-			end;
-			NC_Stream.Is_Open := False;
+		Result := NC_Stream.Finalize (NC_Stream.Z_Stream'Access);
+		if Result /= C.zlib.Z_OK and then Raise_On_Error then
+			Raise_Error (Result);
 		end if;
+		NC_Stream.Is_Open := False;
 	end Close;
 	
 	-- implementation
@@ -141,47 +137,44 @@ package body zlib is
 		Finish : in Boolean;
 		Finished : out Boolean)
 	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Stream) or else raise Status_Error);
+		pragma Check (Dynamic_Predicate,
+			Mode (Stream) = Deflating or else raise Mode_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Reference (Stream).all;
+		Z_Stream : constant not null access C.zlib.z_stream :=
+			NC_Stream.Z_Stream'Access;
+		C_In_Size : constant C.size_t := In_Item'Length;
+		C_In_Item : unsigned_char_array (0 .. C_In_Size - 1);
+		for C_In_Item'Address use In_Item'Address;
+		C_Out_Size : constant C.size_t := Out_Item'Length;
+		C_Out_Item : unsigned_char_array (0 .. C_Out_Size - 1);
+		for C_Out_Item'Address use Out_Item'Address;
+		Result : C.signed_int;
 	begin
-		if not NC_Stream.Is_Open or else NC_Stream.Mode /= Deflating then
-			raise Status_Error;
-		else
-			declare
-				Z_Stream : constant not null access C.zlib.z_stream :=
-					NC_Stream.Z_Stream'Access;
-				C_In_Size : constant C.size_t := In_Item'Length;
-				C_In_Item : unsigned_char_array (0 .. C_In_Size - 1);
-				for C_In_Item'Address use In_Item'Address;
-				C_Out_Size : constant C.size_t := Out_Item'Length;
-				C_Out_Item : unsigned_char_array (0 .. C_Out_Size - 1);
-				for C_Out_Item'Address use Out_Item'Address;
-				Result : C.signed_int;
-			begin
-				Z_Stream.next_in := C_In_Item (0)'Unchecked_Access;
-				Z_Stream.avail_in := C.zconf.uInt (C_In_Size);
-				Z_Stream.next_out := C_Out_Item (0)'Unchecked_Access;
-				Z_Stream.avail_out := C.zconf.uInt (C_Out_Size);
-				Result := C.zlib.deflate (Z_Stream, Flush_Table (Finish));
-				case Result is
-					when C.zlib.Z_OK | C.zlib.Z_STREAM_END =>
-						In_Last := In_Item'First
-							+ Ada.Streams.Stream_Element_Offset (C_In_Size)
-							- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_in)
-							- 1;
-						Out_Last := Out_Item'First
-							+ Ada.Streams.Stream_Element_Offset (C_Out_Size)
-							- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_out)
-							- 1;
-						Finished := Result = C.zlib.Z_STREAM_END;
-						if Finished then
-							NC_Stream.Stream_End := True;
-						end if;
-					when others =>
-						Raise_Error (Result);
-				end case;
-			end;
-		end if;
+		Z_Stream.next_in := C_In_Item (0)'Unchecked_Access;
+		Z_Stream.avail_in := C.zconf.uInt (C_In_Size);
+		Z_Stream.next_out := C_Out_Item (0)'Unchecked_Access;
+		Z_Stream.avail_out := C.zconf.uInt (C_Out_Size);
+		Result := C.zlib.deflate (Z_Stream, Flush_Table (Finish));
+		case Result is
+			when C.zlib.Z_OK | C.zlib.Z_STREAM_END =>
+				In_Last := In_Item'First
+					+ Ada.Streams.Stream_Element_Offset (C_In_Size)
+					- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_in)
+					- 1;
+				Out_Last := Out_Item'First
+					+ Ada.Streams.Stream_Element_Offset (C_Out_Size)
+					- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_out)
+					- 1;
+				Finished := Result = C.zlib.Z_STREAM_END;
+				if Finished then
+					NC_Stream.Stream_End := True;
+				end if;
+			when others =>
+				Raise_Error (Result);
+		end case;
 	end Deflate;
 	
 	procedure Deflate (
@@ -194,7 +187,7 @@ package body zlib is
 		Dummy_Finished : Boolean;
 	begin
 		Deflate (
-			Stream,
+			Stream, -- Status_Error would be raised if Stream is not open
 			In_Item,
 			In_Last,
 			Out_Item,
@@ -214,7 +207,7 @@ package body zlib is
 		Dummy_In_Last : Ada.Streams.Stream_Element_Offset;
 	begin
 		Deflate (
-			Stream,
+			Stream, -- Status_Error would be raised if Stream is not open
 			Dummy_In_Item,
 			Dummy_In_Last,
 			Out_Item,
@@ -253,12 +246,11 @@ package body zlib is
 		Finish : in Boolean;
 		Finished : out Boolean)
 	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Reference (Stream).all;
 	begin
-		if not NC_Stream.Is_Open then
-			raise Status_Error;
-		end if;
 		case NC_Stream.Mode is
 			when Deflating =>
 				Deflate (
@@ -290,47 +282,44 @@ package body zlib is
 		Finish : in Boolean;
 		Finished : out Boolean)
 	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Stream) or else raise Status_Error);
+		pragma Check (Dynamic_Predicate,
+			Mode (Stream) = Inflating or else raise Mode_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Reference (Stream).all;
+		Z_Stream : constant not null access C.zlib.z_stream :=
+			NC_Stream.Z_Stream'Access;
+		C_In_Size : constant C.size_t := In_Item'Length;
+		C_In_Item : unsigned_char_array (0 .. C_In_Size - 1);
+		for C_In_Item'Address use In_Item'Address;
+		C_Out_Size : constant C.size_t := Out_Item'Length;
+		C_Out_Item : unsigned_char_array (0 .. C_Out_Size - 1);
+		for C_Out_Item'Address use Out_Item'Address;
+		Result : C.signed_int;
 	begin
-		if not NC_Stream.Is_Open or else NC_Stream.Mode /= Inflating then
-			raise Status_Error;
-		else
-			declare
-				Z_Stream : constant not null access C.zlib.z_stream :=
-					NC_Stream.Z_Stream'Access;
-				C_In_Size : constant C.size_t := In_Item'Length;
-				C_In_Item : unsigned_char_array (0 .. C_In_Size - 1);
-				for C_In_Item'Address use In_Item'Address;
-				C_Out_Size : constant C.size_t := Out_Item'Length;
-				C_Out_Item : unsigned_char_array (0 .. C_Out_Size - 1);
-				for C_Out_Item'Address use Out_Item'Address;
-				Result : C.signed_int;
-			begin
-				Z_Stream.next_in := C_In_Item (0)'Unchecked_Access;
-				Z_Stream.avail_in := C.zconf.uInt (C_In_Size);
-				Z_Stream.next_out := C_Out_Item (0)'Unchecked_Access;
-				Z_Stream.avail_out := C.zconf.uInt (C_Out_Size);
-				Result := C.zlib.inflate (Z_Stream, Flush_Table (Finish));
-				case Result is
-					when C.zlib.Z_OK | C.zlib.Z_STREAM_END =>
-						In_Last := In_Item'First
-							+ Ada.Streams.Stream_Element_Offset (C_In_Size)
-							- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_in)
-							- 1;
-						Out_Last := Out_Item'First
-							+ Ada.Streams.Stream_Element_Offset (C_Out_Size)
-							- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_out)
-							- 1;
-						Finished := Result = C.zlib.Z_STREAM_END;
-						if Finished then
-							NC_Stream.Stream_End := True;
-						end if;
-					when others =>
-						Raise_Error (Result);
-				end case;
-			end;
-		end if;
+		Z_Stream.next_in := C_In_Item (0)'Unchecked_Access;
+		Z_Stream.avail_in := C.zconf.uInt (C_In_Size);
+		Z_Stream.next_out := C_Out_Item (0)'Unchecked_Access;
+		Z_Stream.avail_out := C.zconf.uInt (C_Out_Size);
+		Result := C.zlib.inflate (Z_Stream, Flush_Table (Finish));
+		case Result is
+			when C.zlib.Z_OK | C.zlib.Z_STREAM_END =>
+				In_Last := In_Item'First
+					+ Ada.Streams.Stream_Element_Offset (C_In_Size)
+					- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_in)
+					- 1;
+				Out_Last := Out_Item'First
+					+ Ada.Streams.Stream_Element_Offset (C_Out_Size)
+					- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_out)
+					- 1;
+				Finished := Result = C.zlib.Z_STREAM_END;
+				if Finished then
+					NC_Stream.Stream_End := True;
+				end if;
+			when others =>
+				Raise_Error (Result);
+		end case;
 	end Inflate;
 	
 	procedure Inflate (
@@ -343,7 +332,7 @@ package body zlib is
 		Dummy_Finished : Boolean;
 	begin
 		Inflate (
-			Stream,
+			Stream, -- Status_Error would be raised if Stream is not open
 			In_Item,
 			In_Last,
 			Out_Item,
@@ -363,7 +352,7 @@ package body zlib is
 		Dummy_In_Last : Ada.Streams.Stream_Element_Offset;
 	begin
 		Inflate (
-			Stream,
+			Stream, -- Status_Error would be raised if Stream is not open
 			Dummy_In_Item,
 			Dummy_In_Last,
 			Out_Item,
@@ -386,6 +375,8 @@ package body zlib is
 	end Inflate_Init;
 	
 	procedure Close (Stream : in out zlib.Stream) is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Reference (Stream).all;
 	begin
@@ -399,28 +390,36 @@ package body zlib is
 		return NC_Stream.Is_Open;
 	end Is_Open;
 	
-	function Mode (Stream : zlib.Stream) return Stream_Mode is
+	function Mode (
+		Stream : zlib.Stream)
+		return Stream_Mode
+	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Constant_Reference (Stream).all;
 	begin
-		if not NC_Stream.Is_Open then
-			raise Status_Error;
-		end if;
 		return NC_Stream.Mode;
 	end Mode;
 	
-	function Total_In (Stream : zlib.Stream)
+	function Total_In (
+		Stream : zlib.Stream)
 		return Ada.Streams.Stream_Element_Count
 	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Constant_Reference (Stream).all;
 	begin
 		return Ada.Streams.Stream_Element_Count (NC_Stream.Z_Stream.total_in);
 	end Total_In;
 	
-	function Total_Out (Stream : zlib.Stream)
+	function Total_Out (
+		Stream : zlib.Stream)
 		return Ada.Streams.Stream_Element_Count
 	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Constant_Reference (Stream).all;
 	begin
@@ -448,7 +447,9 @@ package body zlib is
 		
 		overriding procedure Finalize (Object : in out Stream) is
 		begin
-			Close (Object.Data, Raise_On_Error => False);
+			if Object.Data.Is_Open then
+				Close (Object.Data, Raise_On_Error => False);
+			end if;
 		end Finalize;
 		
 	end Primitives;
@@ -464,21 +465,17 @@ package body zlib is
 		Memory_Level : in zlib.Memory_Level := Default_Memory_Level;
 		Strategy : in Strategy_Type := Default_Strategy)
 	is
-		NC_Filter : Non_Controlled_Stream
-			renames Reference (Filter).all;
+		pragma Check (Dynamic_Predicate,
+			not Is_Open (Filter) or else raise Status_Error);
 	begin
-		if NC_Filter.Is_Open then
-			raise Status_Error;
-		else
-			Internal_Deflate_Init (
-				Filter,
-				Level,
-				Method,
-				Window_Bits,
-				Header,
-				Memory_Level,
-				Strategy);
-		end if;
+		Internal_Deflate_Init (
+			Filter,
+			Level,
+			Method,
+			Window_Bits,
+			Header,
+			Memory_Level,
+			Strategy);
 	end Deflate_Init;
 	
 	procedure Generic_Translate (Filter : in out Filter_Type) is
@@ -497,7 +494,7 @@ package body zlib is
 				In_First := In_Item'First;
 			end if;
 			Translate (
-				Filter,
+				Filter, -- Status_Error would be raised if Filter is not open
 				In_Item (In_First .. In_Last),
 				In_Used,
 				Out_Item,
@@ -514,17 +511,13 @@ package body zlib is
 		Window_Bits : in zlib.Window_Bits := Default_Window_Bits;
 		Header : in Header_Type := Auto)
 	is
-		NC_Filter : Non_Controlled_Stream
-			renames Reference (Filter).all;
+		pragma Check (Dynamic_Predicate,
+			not Is_Open (Filter) or else raise Status_Error);
 	begin
-		if NC_Filter.Is_Open then
-			raise Status_Error;
-		else
-			Internal_Inflate_Init (
-				Filter,
-				Window_Bits,
-				Header);
-		end if;
+		Internal_Inflate_Init (
+			Filter,
+			Window_Bits,
+			Header);
 	end Inflate_Init;
 	
 	procedure Read (
@@ -533,6 +526,8 @@ package body zlib is
 		Last : out Ada.Streams.Stream_Element_Offset;
 		Flush : in Flush_Mode := No_Flush)
 	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Filter) or else raise Status_Error);
 		NC_Filter : Non_Controlled_Stream
 			renames Reference (Filter).all;
 	begin
@@ -578,7 +573,7 @@ package body zlib is
 		Dummy_Finished : Boolean;
 	begin
 		Deflate_Or_Inflate (
-			Filter,
+			Filter, -- Status_Error would be raised if Filter is not open
 			In_Data,
 			In_Last,
 			Out_Data,
@@ -590,10 +585,7 @@ package body zlib is
 	procedure Write (
 		Filter : in out Filter_Type;
 		Item : in Ada.Streams.Stream_Element_Array;
-		Flush : in Flush_Mode := No_Flush)
-	is
-		NC_Filter : Non_Controlled_Stream
-			renames Reference (Filter).all;
+		Flush : in Flush_Mode := No_Flush) is
 	begin
 		if Flush or Item'First <= Item'Last then
 			declare
@@ -604,14 +596,19 @@ package body zlib is
 			begin
 				loop
 					Translate (
-						Filter,
+						Filter, -- Status_Error would be raised if Filter is not open
 						Item (In_First .. Item'Last),
 						In_Used,
 						Out_Item,
 						Out_Last,
 						Flush);
 					Write (Out_Item (Out_Item'First .. Out_Last));
-					exit when NC_Filter.Stream_End or else In_Used >= Item'Last;
+					declare
+						NC_Filter : Non_Controlled_Stream
+							renames Reference (Filter).all;
+					begin
+						exit when NC_Filter.Stream_End or else In_Used >= Item'Last;
+					end;
 					In_First := In_Used + 1;
 				end loop;
 			end;

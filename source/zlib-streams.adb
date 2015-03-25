@@ -185,6 +185,8 @@ package body zlib.Streams is
 	end Open;
 	
 	procedure Close (Object : in out Out_Type) is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Object) or else raise Status_Error);
 	begin
 		Close (Object.Deflator);
 	end Close;
@@ -194,34 +196,35 @@ package body zlib.Streams is
 		return Is_Open (Object.Deflator);
 	end Is_Open;
 	
-	function Stream (Object : in out Out_Type)
-		return not null access Ada.Streams.Root_Stream_Type'Class is
+	function Stream (
+		Object : in out Out_Type)
+		return not null access Ada.Streams.Root_Stream_Type'Class
+	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Object) or else raise Status_Error);
 	begin
-		if not Is_Open (Object) then
-			raise Status_Error;
-		end if;
 		return Object'Unrestricted_Access;
 	end Stream;
 	
-	procedure Finish (Object : in out Out_Type) is
+	procedure Finish (
+		Object : in out Out_Type)
+	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Object) or else raise Status_Error);
 		package Conv is
 			new System.Address_To_Access_Conversions (
 				Ada.Streams.Root_Stream_Type'Class);
+		procedure Deflating_Finish is new Generic_Finish (Deflate);
 	begin
-		if not Is_Open (Object) then
-			raise Status_Error;
-		end if;
-		declare
-			procedure Deflating_Finish is new Generic_Finish (Deflate);
-		begin
-			Deflating_Finish (Conv.To_Pointer (Object.Stream), Object.Deflator);
-		end;
+		Deflating_Finish (Conv.To_Pointer (Object.Stream), Object.Deflator);
 	end Finish;
 	
 	overriding procedure Read (
 		Object : in out Out_Type;
 		Item : out Ada.Streams.Stream_Element_Array;
-		Last : out Ada.Streams.Stream_Element_Offset) is
+		Last : out Ada.Streams.Stream_Element_Offset)
+	is
+		pragma Check (Dynamic_Predicate, Boolean'(raise Mode_Error));
 	begin
 		raise Program_Error; -- exclusive use for writing
 	end Read;
@@ -264,6 +267,8 @@ package body zlib.Streams is
 	end Open;
 	
 	procedure Close (Object : in out In_Type) is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Object) or else raise Status_Error);
 	begin
 		Close (Object.Inflator);
 	end Close;
@@ -273,12 +278,13 @@ package body zlib.Streams is
 		return Is_Open (Object.Inflator);
 	end Is_Open;
 	
-	function Stream (Object : in out In_Type)
-		return not null access Ada.Streams.Root_Stream_Type'Class is
+	function Stream (
+		Object : in out In_Type)
+		return not null access Ada.Streams.Root_Stream_Type'Class
+	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Object) or else raise Status_Error);
 	begin
-		if not Is_Open (Object) then
-			raise Status_Error;
-		end if;
 		return Object'Unrestricted_Access;
 	end Stream;
 	
@@ -304,7 +310,9 @@ package body zlib.Streams is
 	
 	overriding procedure Write (
 		Object : in out In_Type;
-		Item : in Ada.Streams.Stream_Element_Array) is
+		Item : in Ada.Streams.Stream_Element_Array)
+	is
+		pragma Check (Dynamic_Predicate, Boolean'(raise Mode_Error));
 	begin
 		raise Program_Error; -- exclusive use for reading
 	end Write;
@@ -320,6 +328,8 @@ package body zlib.Streams is
 		Strategy : in Strategy_Type := Default_Strategy;
 		Header : in Header_Type := Default)
 	is
+		pragma Check (Dynamic_Predicate,
+			not Is_Open (Stream) or else raise Status_Error);
 		package Conv is
 			new System.Address_To_Access_Conversions (
 				Ada.Streams.Root_Stream_Type'Class);
@@ -342,6 +352,8 @@ package body zlib.Streams is
 	end Create;
 	
 	procedure Close (Object : in out Stream_Type'Class) is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Object) or else raise Status_Error);
 	begin
 		Close (Object.Raw);
 	end Close;
@@ -355,13 +367,12 @@ package body zlib.Streams is
 		Stream : in out Stream_Type'Class;
 		Mode : in Flush_Mode)
 	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Stream) or else raise Status_Error);
 		package Conv is
 			new System.Address_To_Access_Conversions (
 				Ada.Streams.Root_Stream_Type'Class);
 	begin
-		if not Is_Open (Stream) then
-			raise Status_Error;
-		end if;
 		if Mode then
 			declare
 				procedure DI_Finish is new Generic_Finish (Deflate_Or_Inflate);
@@ -392,43 +403,39 @@ package body zlib.Streams is
 		Item : out Ada.Streams.Stream_Element_Array;
 		Last : out Ada.Streams.Stream_Element_Offset)
 	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Object) or else raise Status_Error);
+		pragma Check (Dynamic_Predicate,
+			Object.Direction = In_Stream or else raise Mode_Error);
 		package Conv is
 			new System.Address_To_Access_Conversions (
 				Ada.Streams.Root_Stream_Type'Class);
+		procedure DI_Read is new Generic_Read (Deflate_Or_Inflate);
 	begin
-		if not Is_Open (Object) or else Object.Direction = Out_Stream then
-			raise Status_Error;
-		end if;
-		declare
-			procedure DI_Read is new Generic_Read (Deflate_Or_Inflate);
-		begin
-			DI_Read (
-				Conv.To_Pointer (Object.Target),
-				Item,
-				Last,
-				Object.Raw,
-				Object.In_First,
-				Object.In_Last,
-				Object.In_Buffer);
-		end;
+		DI_Read (
+			Conv.To_Pointer (Object.Target),
+			Item,
+			Last,
+			Object.Raw,
+			Object.In_First,
+			Object.In_Last,
+			Object.In_Buffer);
 	end Read;
 	
 	overriding procedure Write (
 		Object : in out Stream_Type;
 		Item : in Ada.Streams.Stream_Element_Array)
 	is
+		pragma Check (Dynamic_Predicate,
+			Is_Open (Object) or else raise Status_Error);
+		pragma Check (Dynamic_Predicate,
+			Object.Direction = Out_Stream or else raise Mode_Error);
 		package Conv is
 			new System.Address_To_Access_Conversions (
 				Ada.Streams.Root_Stream_Type'Class);
+		procedure DI_Write is new Generic_Write (Deflate_Or_Inflate);
 	begin
-		if not Is_Open (Object) or else Object.Direction = In_Stream then
-			raise Status_Error;
-		end if;
-		declare
-			procedure DI_Write is new Generic_Write (Deflate_Or_Inflate);
-		begin
-			DI_Write (Conv.To_Pointer (Object.Target), Item, Object.Raw);
-		end;
+		DI_Write (Conv.To_Pointer (Object.Target), Item, Object.Raw);
 	end Write;
 	
 end zlib.Streams;

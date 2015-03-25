@@ -13,6 +13,19 @@ package zlib is
 	
 	type Stream is limited private;
 	
+--	subtype Open_Stream is Stream
+--		with
+--			Dynamic_Predicate => Is_Open (Open_Stream),
+--			Predicate_Failure => raise Status_Error;
+--	subtype Deflating_Stream is Open_Stream
+--		with
+--			Dynamic_Predicate => Mode (Deflating) = Deflating,
+--			Predicate_Failure => raise Mode_Error;
+--	subtype Inflating_Stream is Open_Stream
+--		with
+--			Dynamic_Predicate => Mode (Inflating_Stream) = Inflating,
+--			Predicate_Failure => raise Mode_Error;
+	
 	-- level
 	type Compression_Level is range -1 .. 9;
 	No_Compression : constant Compression_Level;
@@ -67,7 +80,7 @@ package zlib is
 		return Stream;
 	
 	procedure Deflate (
-		Stream : in out zlib.Stream;
+		Stream : in out zlib.Stream; -- Deflating_Stream
 		In_Item : in Ada.Streams.Stream_Element_Array;
 		In_Last : out Ada.Streams.Stream_Element_Offset;
 		Out_Item : out Ada.Streams.Stream_Element_Array;
@@ -76,14 +89,14 @@ package zlib is
 		Finished : out Boolean);
 	
 	procedure Deflate (
-		Stream : in out zlib.Stream;
+		Stream : in out zlib.Stream; -- Deflating_Stream
 		In_Item : in Ada.Streams.Stream_Element_Array;
 		In_Last : out Ada.Streams.Stream_Element_Offset;
 		Out_Item : out Ada.Streams.Stream_Element_Array;
 		Out_Last : out Ada.Streams.Stream_Element_Offset);
 	
 	procedure Deflate (
-		Stream : in out zlib.Stream;
+		Stream : in out zlib.Stream; -- Deflating_Stream
 		Out_Item : out Ada.Streams.Stream_Element_Array;
 		Out_Last : out Ada.Streams.Stream_Element_Offset;
 		Finish : in Boolean;
@@ -95,7 +108,7 @@ package zlib is
 		return Stream;
 	
 	procedure Inflate (
-		Stream : in out zlib.Stream;
+		Stream : in out zlib.Stream; -- Inflating_Stream
 		In_Item : in Ada.Streams.Stream_Element_Array;
 		In_Last : out Ada.Streams.Stream_Element_Offset;
 		Out_Item : out Ada.Streams.Stream_Element_Array;
@@ -104,14 +117,14 @@ package zlib is
 		Finished : out Boolean);
 	
 	procedure Inflate (
-		Stream : in out zlib.Stream;
+		Stream : in out zlib.Stream; -- Inflating_Stream
 		In_Item : in Ada.Streams.Stream_Element_Array;
 		In_Last : out Ada.Streams.Stream_Element_Offset;
 		Out_Item : out Ada.Streams.Stream_Element_Array;
 		Out_Last : out Ada.Streams.Stream_Element_Offset);
 	
 	procedure Inflate (
-		Stream : in out zlib.Stream;
+		Stream : in out zlib.Stream; -- Inflating_Stream
 		Out_Item : out Ada.Streams.Stream_Element_Array;
 		Out_Last : out Ada.Streams.Stream_Element_Offset;
 		Finish : in Boolean;
@@ -120,15 +133,21 @@ package zlib is
 	procedure Close (Stream : in out zlib.Stream);
 	
 	function Is_Open (Stream : zlib.Stream) return Boolean;
-	function Mode (Stream : zlib.Stream) return Stream_Mode;
+	function Mode (
+		Stream : zlib.Stream) -- Open_Stream
+		return Stream_Mode;
 	
-	function Total_In (Stream : zlib.Stream)
+	function Total_In (
+		Stream : zlib.Stream) -- Open_Stream
 		return Ada.Streams.Stream_Element_Count;
-	function Total_Out (Stream : zlib.Stream)
+	function Total_Out (
+		Stream : zlib.Stream) -- Open_Stream
 		return Ada.Streams.Stream_Element_Count;
 	
 	Status_Error : exception
 		renames Ada.IO_Exceptions.Status_Error;
+	Mode_Error : exception
+		renames Ada.IO_Exceptions.Mode_Error;
 	Use_Error : exception
 		renames Ada.IO_Exceptions.Use_Error;
 	Data_Error : exception

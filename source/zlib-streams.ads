@@ -11,6 +11,11 @@ package zlib.Streams is
 	type Out_Type is
 		limited private;
 	
+--	subtype Open_Out_Type is Out_Type
+--		with
+--			Dynamic_Predicate => Is_Open (Open_Out_Type),
+--			Predicate_Failure => raise Status_Error;
+	
 	function Open (
 		Stream : not null access Ada.Streams.Root_Stream_Type'Class;
 		Level : Compression_Level := Default_Compression;
@@ -25,15 +30,22 @@ package zlib.Streams is
 	
 	function Is_Open (Object : Out_Type) return Boolean;
 	
-	function Stream (Object : in out Out_Type)
+	function Stream (
+		Object : in out Out_Type) -- Open_Out_Type
 		return not null access Ada.Streams.Root_Stream_Type'Class;
 	
-	procedure Finish (Object : in out Out_Type);
+	procedure Finish (
+		Object : in out Out_Type); -- Open_Out_Type
 	
 	-- only reading with inflation
 	
 	type In_Type (Buffer_Length : Ada.Streams.Stream_Element_Count) is
 		limited private;
+	
+--	subtype Open_In_Type is In_Type
+--		with
+--			Dynamic_Predicate => Is_Open (Open_In_Type),
+--			Predicate_Failure => raise Status_Error;
 	
 	function Open (
 		Stream : not null access Ada.Streams.Root_Stream_Type'Class;
@@ -47,7 +59,8 @@ package zlib.Streams is
 	
 	function Is_Open (Object : In_Type) return Boolean;
 	
-	function Stream (Object : in out In_Type)
+	function Stream (
+		Object : in out In_Type) -- Open_In_Type
 		return not null access Ada.Streams.Root_Stream_Type'Class;
 	
 	-- compatiblity with Zlib.Ada.
