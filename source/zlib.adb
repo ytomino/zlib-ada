@@ -32,9 +32,8 @@ package body zlib is
 			when C.zlib.Z_BUF_ERROR =>
 				raise Constraint_Error with To_String (C.zlib.zError (Result));
 			when others =>
-				null; -- move to below to suppress the warning, bug(?) of gcc-4.5.1
+				raise Use_Error with To_String (C.zlib.zError (Result));
 		end case;
-		raise Status_Error with To_String (C.zlib.zError (Result));
 	end Raise_Error;
 	
 	function Make_Window_Bits (
