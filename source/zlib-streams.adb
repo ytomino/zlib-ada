@@ -67,7 +67,7 @@ package body zlib.Streams is
 		Reading_In_Last : in out Ada.Streams.Stream_Element_Offset;
 		Reading_In_Buffer : in out Ada.Streams.Stream_Element_Array) is
 	begin
-		if Reference (Object).Stream_End then
+		if Controlled.Reference (Object).Stream_End then
 			Last := Item'First - 1;
 		else
 			declare

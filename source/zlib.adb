@@ -63,7 +63,7 @@ package body zlib is
 		Strategy : in zlib.Strategy)
 	is
 		NC_Stream : Non_Controlled_Stream
-			renames Reference (Stream).all;
+			renames Controlled.Reference (Stream).all;
 		Result : C.signed_int;
 	begin
 		NC_Stream.Z_Stream.zalloc := null;
@@ -93,7 +93,7 @@ package body zlib is
 		Header : in Inflation_Header)
 	is
 		NC_Stream : Non_Controlled_Stream
-			renames Reference (Stream).all;
+			renames Controlled.Reference (Stream).all;
 		Result : C.signed_int;
 	begin
 		NC_Stream.Z_Stream.zalloc := null;
@@ -142,7 +142,7 @@ package body zlib is
 		pragma Check (Dynamic_Predicate,
 			Mode (Stream) = Deflating or else raise Mode_Error);
 		NC_Stream : Non_Controlled_Stream
-			renames Reference (Stream).all;
+			renames Controlled.Reference (Stream).all;
 		Z_Stream : constant not null access C.zlib.z_stream :=
 			NC_Stream.Z_Stream'Access;
 		C_In_Size : constant C.size_t := In_Item'Length;
@@ -249,7 +249,7 @@ package body zlib is
 		pragma Check (Dynamic_Predicate,
 			Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
-			renames Reference (Stream).all;
+			renames Controlled.Reference (Stream).all;
 	begin
 		case NC_Stream.Mode is
 			when Deflating =>
@@ -287,7 +287,7 @@ package body zlib is
 		pragma Check (Dynamic_Predicate,
 			Mode (Stream) = Inflating or else raise Mode_Error);
 		NC_Stream : Non_Controlled_Stream
-			renames Reference (Stream).all;
+			renames Controlled.Reference (Stream).all;
 		Z_Stream : constant not null access C.zlib.z_stream :=
 			NC_Stream.Z_Stream'Access;
 		C_In_Size : constant C.size_t := In_Item'Length;
@@ -378,14 +378,14 @@ package body zlib is
 		pragma Check (Dynamic_Predicate,
 			Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
-			renames Reference (Stream).all;
+			renames Controlled.Reference (Stream).all;
 	begin
 		Close (NC_Stream, Raise_On_Error => True);
 	end Close;
 	
 	function Is_Open (Stream : zlib.Stream) return Boolean is
 		NC_Stream : Non_Controlled_Stream
-			renames Constant_Reference (Stream).all;
+			renames Controlled.Constant_Reference (Stream).all;
 	begin
 		return NC_Stream.Is_Open;
 	end Is_Open;
@@ -397,7 +397,7 @@ package body zlib is
 		pragma Check (Dynamic_Predicate,
 			Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
-			renames Constant_Reference (Stream).all;
+			renames Controlled.Constant_Reference (Stream).all;
 	begin
 		return NC_Stream.Mode;
 	end Mode;
@@ -409,7 +409,7 @@ package body zlib is
 		pragma Check (Dynamic_Predicate,
 			Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
-			renames Constant_Reference (Stream).all;
+			renames Controlled.Constant_Reference (Stream).all;
 	begin
 		return Ada.Streams.Stream_Element_Count (NC_Stream.Z_Stream.total_in);
 	end Total_In;
@@ -421,7 +421,7 @@ package body zlib is
 		pragma Check (Dynamic_Predicate,
 			Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
-			renames Constant_Reference (Stream).all;
+			renames Controlled.Constant_Reference (Stream).all;
 	begin
 		return Ada.Streams.Stream_Element_Count (NC_Stream.Z_Stream.total_out);
 	end Total_Out;
@@ -433,16 +433,16 @@ package body zlib is
 	
 	package body Controlled is
 		
-		function Constant_Reference (Object : Stream)
+		function Constant_Reference (Object : zlib.Stream)
 			return not null access constant Non_Controlled_Stream is
 		begin
-			return Object.Data'Unchecked_Access;
+			return Stream (Object).Data'Unchecked_Access;
 		end Constant_Reference;
 		
-		function Reference (Object : in out Stream)
+		function Reference (Object : in out zlib.Stream)
 			return not null access Non_Controlled_Stream is
 		begin
-			return Object.Data'Unchecked_Access;
+			return Stream (Object).Data'Unrestricted_Access;
 		end Reference;
 		
 		overriding procedure Finalize (Object : in out Stream) is
@@ -480,7 +480,7 @@ package body zlib is
 	
 	procedure Generic_Translate (Filter : in out Filter_Type) is
 		NC_Filter : Non_Controlled_Stream
-			renames Reference (Filter).all;
+			renames Controlled.Reference (Filter).all;
 		In_Item : Ada.Streams.Stream_Element_Array (1 .. 2 ** 15);
 		In_First : Ada.Streams.Stream_Element_Offset := In_Item'Last + 1;
 		In_Last : Ada.Streams.Stream_Element_Offset;
@@ -529,7 +529,7 @@ package body zlib is
 		pragma Check (Dynamic_Predicate,
 			Is_Open (Filter) or else raise Status_Error);
 		NC_Filter : Non_Controlled_Stream
-			renames Reference (Filter).all;
+			renames Controlled.Reference (Filter).all;
 	begin
 		if NC_Filter.Stream_End then
 			Last := Item'First - 1;
@@ -590,26 +590,26 @@ package body zlib is
 		if Flush or Item'First <= Item'Last then
 			declare
 				In_First : Ada.Streams.Stream_Element_Offset := Item'First;
-				In_Used : Ada.Streams.Stream_Element_Offset;
-				Out_Item : Ada.Streams.Stream_Element_Array (1 .. 2 ** 15);
-				Out_Last : Ada.Streams.Stream_Element_Offset;
 			begin
 				loop
-					Translate (
-						Filter, -- Status_Error would be raised if Filter is not open
-						Item (In_First .. Item'Last),
-						In_Used,
-						Out_Item,
-						Out_Last,
-						Flush);
-					Write (Out_Item (Out_Item'First .. Out_Last));
 					declare
-						NC_Filter : Non_Controlled_Stream
-							renames Reference (Filter).all;
+						In_Used : Ada.Streams.Stream_Element_Offset;
+						Out_Item : Ada.Streams.Stream_Element_Array (1 .. 2 ** 15);
+						Out_Last : Ada.Streams.Stream_Element_Offset;
+						Finished : Boolean;
 					begin
-						exit when NC_Filter.Stream_End or else In_Used >= Item'Last;
+						Deflate_Or_Inflate (
+							Filter, -- Status_Error would be raised if it is not open
+							Item (In_First .. Item'Last),
+							In_Used,
+							Out_Item,
+							Out_Last,
+							Flush,
+							Finished);
+						Write (Out_Item (Out_Item'First .. Out_Last));
+						exit when Finished or else In_Used >= Item'Last;
+						In_First := In_Used + 1;
 					end;
-					In_First := In_Used + 1;
 				end loop;
 			end;
 		end if;

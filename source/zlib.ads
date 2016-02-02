@@ -240,9 +240,9 @@ private
 		
 		type Stream is limited private;
 		
-		function Constant_Reference (Object : Stream)
+		function Constant_Reference (Object : zlib.Stream)
 			return not null access constant Non_Controlled_Stream;
-		function Reference (Object : in out Stream)
+		function Reference (Object : in out zlib.Stream)
 			return not null access Non_Controlled_Stream;
 		
 		pragma Inline (Constant_Reference);
