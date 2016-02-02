@@ -431,7 +431,7 @@ package body zlib is
 		return To_String (C.zlib.zlibVersion);
 	end Version;
 	
-	package body Primitives is
+	package body Controlled is
 		
 		function Constant_Reference (Object : Stream)
 			return not null access constant Non_Controlled_Stream is
@@ -452,7 +452,7 @@ package body zlib is
 			end if;
 		end Finalize;
 		
-	end Primitives;
+	end Controlled;
 	
 	-- compatibility
 	

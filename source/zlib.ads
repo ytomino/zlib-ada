@@ -236,7 +236,7 @@ private
 	end record;
 	pragma Suppress_Initialization (Non_Controlled_Stream);
 	
-	package Primitives is
+	package Controlled is
 		
 		type Stream is limited private;
 		
@@ -260,9 +260,9 @@ private
 		
 		overriding procedure Finalize (Object : in out Stream);
 	
-	end Primitives;
+	end Controlled;
 	
-	type Stream is new Primitives.Stream;
+	type Stream is new Controlled.Stream;
 	
 	No_Compression : constant Compression_Level := C.zlib.Z_NO_COMPRESSION;
 	Best_Speed : constant Compression_Level := C.zlib.Z_BEST_SPEED;
