@@ -224,8 +224,8 @@ private
 		"MAX_MEM_LEVEL is mismatch");
 	
 	type Finalize_Type is access
-		function (strm : access C.zlib.z_stream) return C.signed_int;
-	pragma Convention (C, Finalize_Type);
+		function (strm : access C.zlib.z_stream) return C.signed_int
+		with Convention => C;
 	
 	type Non_Controlled_Stream is record
 		Z_Stream : aliased C.zlib.z_stream;

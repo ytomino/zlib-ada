@@ -5,9 +5,9 @@ package body zlib is
 	use type C.size_t;
 	
 	type unsigned_char_array is
-		array (C.size_t range <>) of aliased C.unsigned_char;
+		array (C.size_t range <>) of aliased C.unsigned_char
+		with Convention => C;
 	pragma Suppress_Initialization (unsigned_char_array);
-	pragma Convention (C, unsigned_char_array);
 	-- C.unsigned_char_array is not generated in some cases
 	
 	Flush_Table : constant array (Boolean) of C.signed_int := (
