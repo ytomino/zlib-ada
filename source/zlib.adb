@@ -587,7 +587,7 @@ package body zlib is
 		Item : in Ada.Streams.Stream_Element_Array;
 		Flush : in Flush_Mode := No_Flush) is
 	begin
-		if Flush or Item'First <= Item'Last then
+		if Flush or else Item'First <= Item'Last then
 			declare
 				In_First : Ada.Streams.Stream_Element_Offset := Item'First;
 			begin
