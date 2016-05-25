@@ -54,12 +54,12 @@ OFFICIAL_DEMO:=$(notdir $(basename $(wildcard official-demo/*.adb)))
 
 all: $(EXAMPLES) $(OFFICIAL_DEMO)
 
-$(BUILDDIR)/%: %.adb $(BUILDDIR) $(IMPORTDIR) $(wildcard $(SOURCEDIR)/*)
+$(BUILDDIR)/%: %.adb $(wildcard $(SOURCEDIR)/*) | $(BUILDDIR) $(IMPORTDIR)
 	$(GNATPREFIX)gnatmake -c -I$(SOURCEDIR) $< $(GFLAGS) $(MFLAGS) -cargs $(CFLAGS)
 	cd $(BUILDDIR) && $(GNATPREFIX)gnatmake -b $(basename $(notdir $<)).ali $(GFLAGS) -bargs $(BFLAGS)
 	cd $(BUILDDIR) && $(GNATPREFIX)gnatlink -o ../$@ $(basename $(notdir $<)).ali $(GFLAGS) $(LFLAGS)
 
-$(BUILDDIR)/%: official-demo/%.adb $(BUILDDIR) $(IMPORTDIR) $(wildcard $(SOURCEDIR)/*)
+$(BUILDDIR)/%: official-demo/%.adb $(wildcard $(SOURCEDIR)/*) | $(BUILDDIR) $(IMPORTDIR)
 	$(GNATPREFIX)gnatmake -c -I$(SOURCEDIR) $< $(GFLAGS) $(MFLAGS) -cargs $(CFLAGS) -gnatwA -gnatyN
 	cd $(BUILDDIR) && $(GNATPREFIX)gnatmake -b $(basename $(notdir $<)).ali $(GFLAGS) -bargs $(BFLAGS)
 	cd $(BUILDDIR) && $(GNATPREFIX)gnatlink -o ../$@ $(basename $(notdir $<)).ali $(GFLAGS) $(LFLAGS)
@@ -67,7 +67,7 @@ $(BUILDDIR)/%: official-demo/%.adb $(BUILDDIR) $(IMPORTDIR) $(wildcard $(SOURCED
 $(BUILDDIR):
 	mkdir $(BUILDDIR)
 
-$(BINLN): $(BUILDDIR)
+$(BINLN): | $(BUILDDIR)
 	ln -s $(BUILDDIR) $(BINLN)
 
 $(EXAMPLES): %: $(BUILDDIR)/% $(BINLN)
