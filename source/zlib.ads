@@ -37,6 +37,7 @@ package zlib is
 	package Compression_Methods is
 		type Compression_Method is (Deflated);
 	private
+		for Compression_Method'Size use C.signed_int'Size;
 		for Compression_Method use (Deflated => C.zlib.Z_DEFLATED);
 	end Compression_Methods;
 	type Compression_Method is new Compression_Methods.Compression_Method;
@@ -61,6 +62,7 @@ package zlib is
 			RLE,
 			Fixed);
 	private
+		for Strategy'Size use C.signed_int'Size;
 		for Strategy use (
 			Default_Strategy => C.zlib.Z_DEFAULT_STRATEGY,
 			Filtered => C.zlib.Z_FILTERED,
@@ -253,6 +255,7 @@ private
 		type Stream is
 			limited new Ada.Finalization.Limited_Controlled with
 		record
+			Variable_View : not null access Stream := Stream'Unchecked_Access;
 			Data : aliased Non_Controlled_Stream := (
 				Is_Open => False,
 				others => <>);

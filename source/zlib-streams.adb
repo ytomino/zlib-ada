@@ -174,6 +174,7 @@ package body zlib.Streams is
 				Ada.Streams.Root_Stream_Type'Class);
 	begin
 		return (Ada.Streams.Root_Stream_Type with
+			Variable_View => <>, -- default value
 			Stream => Conv.To_Address (Conv.Object_Pointer (Stream)),
 			Deflator => Deflate_Init (
 				Level => Level,
@@ -203,7 +204,7 @@ package body zlib.Streams is
 		pragma Check (Dynamic_Predicate,
 			Is_Open (Object) or else raise Status_Error);
 	begin
-		return Object'Unrestricted_Access;
+		return Object.Variable_View;
 	end Stream;
 	
 	procedure Finish (
@@ -256,6 +257,7 @@ package body zlib.Streams is
 				Ada.Streams.Root_Stream_Type'Class);
 	begin
 		return (Ada.Streams.Root_Stream_Type with
+			Variable_View => <>, -- default value
 			Buffer_Length => Buffer_Length,
 			Stream => Conv.To_Address (Conv.Object_Pointer (Stream)),
 			Inflator => Inflate_Init (
@@ -285,7 +287,7 @@ package body zlib.Streams is
 		pragma Check (Dynamic_Predicate,
 			Is_Open (Object) or else raise Status_Error);
 	begin
-		return Object'Unrestricted_Access;
+		return Object.Variable_View;
 	end Stream;
 	
 	overriding procedure Read (

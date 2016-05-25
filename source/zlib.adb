@@ -1,3 +1,4 @@
+with Ada.Unchecked_Conversion;
 with System;
 with C.string;
 package body zlib is
@@ -62,6 +63,10 @@ package body zlib is
 		Memory_Level : in zlib.Memory_Level;
 		Strategy : in zlib.Strategy)
 	is
+		function To_signed_int is
+			new Ada.Unchecked_Conversion (Compression_Method, C.signed_int);
+		function To_signed_int is
+			new Ada.Unchecked_Conversion (zlib.Strategy, C.signed_int);
 		NC_Stream : Non_Controlled_Stream
 			renames Controlled.Reference (Stream).all;
 		Result : C.signed_int;
@@ -71,13 +76,13 @@ package body zlib is
 		NC_Stream.Z_Stream.opaque := C.void_ptr (System.Null_Address);
 		Result := C.zlib.deflateInit2q (
 			NC_Stream.Z_Stream'Access,
-			level => Compression_Level'Enum_Rep (Level),
-			method => Compression_Method'Enum_Rep (Method),
+			level => C.signed_int (Level),
+			method => To_signed_int (Method),
 			windowBits => Make_Window_Bits (Window_Bits, Header),
-			memLevel => zlib.Memory_Level'Enum_Rep (Memory_Level),
-			strategy => zlib.Strategy'Enum_Rep (Strategy),
+			memLevel => C.signed_int (Memory_Level),
+			strategy => To_signed_int (Strategy),
 			version => C.zlib.ZLIB_VERSION (C.zlib.ZLIB_VERSION'First)'Access,
-			stream_size => C.zlib.z_stream'Size / Standard'Storage_Unit);
+			stream_size => C.zlib.z_stream'Size / System.Storage_Unit);
 		if Result /= C.zlib.Z_OK then
 			Raise_Error (Result);
 		end if;
@@ -103,7 +108,7 @@ package body zlib is
 			NC_Stream.Z_Stream'Access,
 			windowBits => Make_Window_Bits (Window_Bits, Header),
 			version => C.zlib.ZLIB_VERSION (C.zlib.ZLIB_VERSION'First)'Access,
-			stream_size => C.zlib.z_stream'Size / Standard'Storage_Unit);
+			stream_size => C.zlib.z_stream'Size / System.Storage_Unit);
 		if Result /= C.zlib.Z_OK then
 			Raise_Error (Result);
 		end if;
@@ -442,7 +447,7 @@ package body zlib is
 		function Reference (Object : in out zlib.Stream)
 			return not null access Non_Controlled_Stream is
 		begin
-			return Stream (Object).Data'Unrestricted_Access;
+			return Stream (Object).Variable_View.Data'Access;
 		end Reference;
 		
 		overriding procedure Finalize (Object : in out Stream) is

@@ -103,6 +103,7 @@ private
 	type Out_Type is
 		limited new Ada.Streams.Root_Stream_Type with
 	record
+		Variable_View : not null access Out_Type := Out_Type'Unchecked_Access;
 		Stream : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
 		Deflator : zlib.Stream;
 	end record;
@@ -120,6 +121,7 @@ private
 	type In_Type (Buffer_Length : Ada.Streams.Stream_Element_Count) is
 		limited new Ada.Streams.Root_Stream_Type with
 	record
+		Variable_View : not null access In_Type := In_Type'Unchecked_Access;
 		Stream : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
 		Inflator : zlib.Stream;
 		In_First : Ada.Streams.Stream_Element_Offset;
