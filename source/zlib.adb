@@ -151,10 +151,10 @@ package body zlib is
 		Z_Stream : constant not null access C.zlib.z_stream :=
 			NC_Stream.Z_Stream'Access;
 		C_In_Size : constant C.size_t := In_Item'Length;
-		C_In_Item : unsigned_char_array (0 .. C_In_Size - 1);
+		C_In_Item : unsigned_char_array (0 .. C.size_t'Max (C_In_Size, 1) - 1);
 		for C_In_Item'Address use In_Item'Address;
 		C_Out_Size : constant C.size_t := Out_Item'Length;
-		C_Out_Item : unsigned_char_array (0 .. C_Out_Size - 1);
+		C_Out_Item : unsigned_char_array (0 .. C.size_t'Max (C_Out_Size, 1) - 1);
 		for C_Out_Item'Address use Out_Item'Address;
 		Result : C.signed_int;
 	begin
@@ -296,10 +296,10 @@ package body zlib is
 		Z_Stream : constant not null access C.zlib.z_stream :=
 			NC_Stream.Z_Stream'Access;
 		C_In_Size : constant C.size_t := In_Item'Length;
-		C_In_Item : unsigned_char_array (0 .. C_In_Size - 1);
+		C_In_Item : unsigned_char_array (0 .. C.size_t'Max (C_In_Size, 1) - 1);
 		for C_In_Item'Address use In_Item'Address;
 		C_Out_Size : constant C.size_t := Out_Item'Length;
-		C_Out_Item : unsigned_char_array (0 .. C_Out_Size - 1);
+		C_Out_Item : unsigned_char_array (0 .. C.size_t'Max (C_Out_Size, 1) - 1);
 		for C_Out_Item'Address use Out_Item'Address;
 		Result : C.signed_int;
 	begin
