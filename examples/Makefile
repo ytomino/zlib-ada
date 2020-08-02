@@ -73,7 +73,7 @@ $(BINLN): | $(BUILDDIR)
 $(EXAMPLES): %: $(BUILDDIR)/% $(BINLN)
 $(OFFICIAL_DEMO): %: $(BUILDDIR)/% $(BINLN)
 
-ifneq ($(IMPORTDIR),)
+ifeq ($(IMPORTDIR),$(BUILDDIR)/import)
 $(IMPORTDIR): $(SOURCEDIR)/import.h
 	headmaster --to ada $(HFLAGS) -p -D $@ $+
 	touch $@
