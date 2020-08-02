@@ -1,7 +1,7 @@
-/*.build/
 /bin
 /test_di.gz
 /testzlib.in
 /testzlib.out
 /testzlib.zlb
 /*.adc
+/*.noindex
