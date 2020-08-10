@@ -4,7 +4,6 @@ with Ada.Text_IO;
 with Ada.Integer_Text_IO;
 with zlib.Streams;
 procedure stream is
-	use type Ada.Streams.Stream_Element_Offset;
 	Text : constant String := "Hello, zlib!";
 	Temporary_File : Ada.Streams.Stream_IO.File_Type;
 	Extracted : String (1 .. 1024);
