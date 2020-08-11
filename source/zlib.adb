@@ -143,9 +143,9 @@ package body zlib is
 		Finished : out Boolean)
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Stream) or else raise Status_Error);
+			Check => Is_Open (Stream) or else raise Status_Error);
 		pragma Check (Dynamic_Predicate,
-			Mode (Stream) = Deflating or else raise Mode_Error);
+			Check => Mode (Stream) = Deflating or else raise Mode_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Controlled.Reference (Stream).all;
 		Z_Stream : constant not null access C.zlib.z_stream :=
@@ -252,7 +252,7 @@ package body zlib is
 		Finished : out Boolean)
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Stream) or else raise Status_Error);
+			Check => Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Controlled.Reference (Stream).all;
 	begin
@@ -288,9 +288,9 @@ package body zlib is
 		Finished : out Boolean)
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Stream) or else raise Status_Error);
+			Check => Is_Open (Stream) or else raise Status_Error);
 		pragma Check (Dynamic_Predicate,
-			Mode (Stream) = Inflating or else raise Mode_Error);
+			Check => Mode (Stream) = Inflating or else raise Mode_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Controlled.Reference (Stream).all;
 		Z_Stream : constant not null access C.zlib.z_stream :=
@@ -381,7 +381,7 @@ package body zlib is
 	
 	procedure Close (Stream : in out zlib.Stream) is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Stream) or else raise Status_Error);
+			Check => Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Controlled.Reference (Stream).all;
 	begin
@@ -400,7 +400,7 @@ package body zlib is
 		return Stream_Mode
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Stream) or else raise Status_Error);
+			Check => Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Controlled.Constant_Reference (Stream).all;
 	begin
@@ -412,7 +412,7 @@ package body zlib is
 		return Ada.Streams.Stream_Element_Count
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Stream) or else raise Status_Error);
+			Check => Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Controlled.Constant_Reference (Stream).all;
 	begin
@@ -424,7 +424,7 @@ package body zlib is
 		return Ada.Streams.Stream_Element_Count
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Stream) or else raise Status_Error);
+			Check => Is_Open (Stream) or else raise Status_Error);
 		NC_Stream : Non_Controlled_Stream
 			renames Controlled.Constant_Reference (Stream).all;
 	begin
@@ -471,7 +471,7 @@ package body zlib is
 		Strategy : in Strategy_Type := Default_Strategy)
 	is
 		pragma Check (Dynamic_Predicate,
-			not Is_Open (Filter) or else raise Status_Error);
+			Check => not Is_Open (Filter) or else raise Status_Error);
 	begin
 		Internal_Deflate_Init (
 			Filter,
@@ -517,7 +517,7 @@ package body zlib is
 		Header : in Header_Type := Auto)
 	is
 		pragma Check (Dynamic_Predicate,
-			not Is_Open (Filter) or else raise Status_Error);
+			Check => not Is_Open (Filter) or else raise Status_Error);
 	begin
 		Internal_Inflate_Init (
 			Filter,
@@ -532,7 +532,7 @@ package body zlib is
 		Flush : in Flush_Mode := No_Flush)
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Filter) or else raise Status_Error);
+			Check => Is_Open (Filter) or else raise Status_Error);
 		NC_Filter : Non_Controlled_Stream
 			renames Controlled.Reference (Filter).all;
 	begin

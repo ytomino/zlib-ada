@@ -187,7 +187,7 @@ package body zlib.Streams is
 	
 	procedure Close (Object : in out Out_Type) is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Object) or else raise Status_Error);
+			Check => Is_Open (Object) or else raise Status_Error);
 	begin
 		Close (Object.Deflator);
 	end Close;
@@ -202,7 +202,7 @@ package body zlib.Streams is
 		return not null access Ada.Streams.Root_Stream_Type'Class
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Object) or else raise Status_Error);
+			Check => Is_Open (Object) or else raise Status_Error);
 	begin
 		return Object.Variable_View;
 	end Stream;
@@ -211,7 +211,7 @@ package body zlib.Streams is
 		Object : in out Out_Type)
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Object) or else raise Status_Error);
+			Check => Is_Open (Object) or else raise Status_Error);
 		package Conv is
 			new System.Address_To_Access_Conversions (
 				Ada.Streams.Root_Stream_Type'Class);
@@ -225,7 +225,7 @@ package body zlib.Streams is
 		Item : out Ada.Streams.Stream_Element_Array;
 		Last : out Ada.Streams.Stream_Element_Offset)
 	is
-		pragma Check (Dynamic_Predicate, Boolean'(raise Mode_Error));
+		pragma Check (Dynamic_Predicate, Check => Boolean'(raise Mode_Error));
 	begin
 		raise Program_Error; -- exclusive use for writing
 	end Read;
@@ -270,7 +270,7 @@ package body zlib.Streams is
 	
 	procedure Close (Object : in out In_Type) is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Object) or else raise Status_Error);
+			Check => Is_Open (Object) or else raise Status_Error);
 	begin
 		Close (Object.Inflator);
 	end Close;
@@ -285,7 +285,7 @@ package body zlib.Streams is
 		return not null access Ada.Streams.Root_Stream_Type'Class
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Object) or else raise Status_Error);
+			Check => Is_Open (Object) or else raise Status_Error);
 	begin
 		return Object.Variable_View;
 	end Stream;
@@ -314,7 +314,7 @@ package body zlib.Streams is
 		Object : in out In_Type;
 		Item : in Ada.Streams.Stream_Element_Array)
 	is
-		pragma Check (Dynamic_Predicate, Boolean'(raise Mode_Error));
+		pragma Check (Dynamic_Predicate, Check => Boolean'(raise Mode_Error));
 	begin
 		raise Program_Error; -- exclusive use for reading
 	end Write;
@@ -331,7 +331,7 @@ package body zlib.Streams is
 		Header : in Header_Type := Default)
 	is
 		pragma Check (Dynamic_Predicate,
-			not Is_Open (Stream) or else raise Status_Error);
+			Check => not Is_Open (Stream) or else raise Status_Error);
 		package Conv is
 			new System.Address_To_Access_Conversions (
 				Ada.Streams.Root_Stream_Type'Class);
@@ -355,7 +355,7 @@ package body zlib.Streams is
 	
 	procedure Close (Object : in out Stream_Type'Class) is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Object) or else raise Status_Error);
+			Check => Is_Open (Object) or else raise Status_Error);
 	begin
 		Close (Object.Raw);
 	end Close;
@@ -370,7 +370,7 @@ package body zlib.Streams is
 		Mode : in Flush_Mode)
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Stream) or else raise Status_Error);
+			Check => Is_Open (Stream) or else raise Status_Error);
 		package Conv is
 			new System.Address_To_Access_Conversions (
 				Ada.Streams.Root_Stream_Type'Class);
@@ -406,9 +406,9 @@ package body zlib.Streams is
 		Last : out Ada.Streams.Stream_Element_Offset)
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Object) or else raise Status_Error);
+			Check => Is_Open (Object) or else raise Status_Error);
 		pragma Check (Dynamic_Predicate,
-			Object.Direction = In_Stream or else raise Mode_Error);
+			Check => Object.Direction = In_Stream or else raise Mode_Error);
 		package Conv is
 			new System.Address_To_Access_Conversions (
 				Ada.Streams.Root_Stream_Type'Class);
@@ -429,9 +429,9 @@ package body zlib.Streams is
 		Item : in Ada.Streams.Stream_Element_Array)
 	is
 		pragma Check (Dynamic_Predicate,
-			Is_Open (Object) or else raise Status_Error);
+			Check => Is_Open (Object) or else raise Status_Error);
 		pragma Check (Dynamic_Predicate,
-			Object.Direction = Out_Stream or else raise Mode_Error);
+			Check => Object.Direction = Out_Stream or else raise Mode_Error);
 		package Conv is
 			new System.Address_To_Access_Conversions (
 				Ada.Streams.Root_Stream_Type'Class);
