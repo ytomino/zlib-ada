@@ -16,8 +16,9 @@ begin
 		declare
 			Size : constant Ada.Streams.Stream_IO.Count :=
 				Ada.Streams.Stream_IO.Size (Source_File);
-			Source : Ada.Streams.Stream_Element_Array
-				(1 .. Ada.Streams.Stream_Element_Offset (Size));
+			Source :
+				Ada.Streams.Stream_Element_Array
+					(1 .. Ada.Streams.Stream_Element_Offset (Size));
 			Reading_Last : Ada.Streams.Stream_Element_Offset;
 		begin
 			Ada.Streams.Stream_IO.Read (Source_File, Source, Reading_Last);
@@ -31,9 +32,7 @@ begin
 				Out_Last : Ada.Streams.Stream_Element_Offset;
 				Finished : Boolean;
 			begin
-				Ada.Streams.Stream_IO.Create (
-					Gz_File,
-					Name => "test_di.gz");
+				Ada.Streams.Stream_IO.Create (Gz_File, Name => "test_di.gz");
 				loop
 					Ada.Text_IO.Put ('*');
 					zlib.Deflate (
@@ -44,9 +43,7 @@ begin
 						Out_Last,
 						Finish => True,
 						Finished => Finished);
-					Ada.Streams.Stream_IO.Write (
-						Gz_File,
-						Output (Output'First .. Out_Last));
+					Ada.Streams.Stream_IO.Write (Gz_File, Output (Output'First .. Out_Last));
 					exit when Finished;
 					First := In_Last + 1;
 				end loop;

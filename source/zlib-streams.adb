@@ -33,9 +33,7 @@ package body zlib.Streams is
 				Out_Last,
 				True,
 				Finished);
-				Ada.Streams.Write (
-					Stream.all,
-					Out_Item (Out_Item'First .. Out_Last));
+			Ada.Streams.Write (Stream.all, Out_Item (Out_Item'First .. Out_Last));
 			exit when Finished;
 		end loop;
 	end Generic_Finish;
@@ -80,10 +78,7 @@ package body zlib.Streams is
 					if Reading_In_First > Reading_In_Last then
 						Reading_In_First := Reading_In_Buffer'First;
 						begin
-							Ada.Streams.Read (
-								Stream.all,
-								Reading_In_Buffer,
-								Reading_In_Last);
+							Ada.Streams.Read (Stream.all, Reading_In_Buffer, Reading_In_Last);
 						exception
 							when End_Error =>
 								Reading_In_Last := Reading_In_First - 1;
@@ -147,9 +142,7 @@ package body zlib.Streams is
 						Out_Last,
 						False,
 						Finished);
-					Ada.Streams.Write (
-						Stream.all,
-						Out_Item (Out_Item'First .. Out_Last));
+					Ada.Streams.Write (Stream.all, Out_Item (Out_Item'First .. Out_Last));
 					exit when Finished or else In_Used >= Item'Last;
 					In_First := In_Used + 1;
 				end loop;
@@ -170,19 +163,20 @@ package body zlib.Streams is
 		return Out_Type
 	is
 		package Conv is
-			new System.Address_To_Access_Conversions (
-				Ada.Streams.Root_Stream_Type'Class);
+			new System.Address_To_Access_Conversions (Ada.Streams.Root_Stream_Type'Class);
 	begin
-		return (Ada.Streams.Root_Stream_Type with
-			Variable_View => <>, -- default value
-			Stream => Conv.To_Address (Conv.Object_Pointer (Stream)),
-			Deflator => Deflate_Init (
-				Level => Level,
-				Method => Method,
-				Window_Bits => Window_Bits,
-				Header => Header,
-				Memory_Level => Memory_Level,
-				Strategy => Strategy));
+		return (Ada.Streams.Root_Stream_Type
+			with
+				Variable_View => <>, -- default value
+				Stream => Conv.To_Address (Conv.Object_Pointer (Stream)),
+				Deflator =>
+					Deflate_Init (
+						Level => Level,
+						Method => Method,
+						Window_Bits => Window_Bits,
+						Header => Header,
+						Memory_Level => Memory_Level,
+						Strategy => Strategy));
 	end Open;
 	
 	procedure Close (Object : in out Out_Type) is
@@ -213,8 +207,7 @@ package body zlib.Streams is
 		pragma Check (Dynamic_Predicate,
 			Check => Is_Open (Object) or else raise Status_Error);
 		package Conv is
-			new System.Address_To_Access_Conversions (
-				Ada.Streams.Root_Stream_Type'Class);
+			new System.Address_To_Access_Conversions (Ada.Streams.Root_Stream_Type'Class);
 		procedure Deflating_Finish is new Generic_Finish (Deflate);
 	begin
 		Deflating_Finish (Conv.To_Pointer (Object.Stream), Object.Deflator);
@@ -235,8 +228,7 @@ package body zlib.Streams is
 		Item : in Ada.Streams.Stream_Element_Array)
 	is
 		package Conv is
-			new System.Address_To_Access_Conversions (
-				Ada.Streams.Root_Stream_Type'Class);
+			new System.Address_To_Access_Conversions (Ada.Streams.Root_Stream_Type'Class);
 		procedure Deflating_Write is new Generic_Write (Deflate);
 	begin
 		Deflating_Write (Conv.To_Pointer (Object.Stream), Item, Object.Deflator);
@@ -248,24 +240,21 @@ package body zlib.Streams is
 		Stream : not null access Ada.Streams.Root_Stream_Type'Class;
 		Window_Bits : zlib.Window_Bits := Default_Window_Bits;
 		Header : Inflation_Header := Auto;
-		Buffer_Length : Ada.Streams.Stream_Element_Count :=
-			Default_Buffer_Length)
+		Buffer_Length : Ada.Streams.Stream_Element_Count := Default_Buffer_Length)
 		return In_Type
 	is
 		package Conv is
-			new System.Address_To_Access_Conversions (
-				Ada.Streams.Root_Stream_Type'Class);
+			new System.Address_To_Access_Conversions (Ada.Streams.Root_Stream_Type'Class);
 	begin
-		return (Ada.Streams.Root_Stream_Type with
-			Variable_View => <>, -- default value
-			Buffer_Length => Buffer_Length,
-			Stream => Conv.To_Address (Conv.Object_Pointer (Stream)),
-			Inflator => Inflate_Init (
-				Window_Bits => Window_Bits,
-				Header => Header),
-			In_Buffer => <>,
-			In_First => 0,
-			In_Last => -1);
+		return (Ada.Streams.Root_Stream_Type
+			with
+				Variable_View => <>, -- default value
+				Buffer_Length => Buffer_Length,
+				Stream => Conv.To_Address (Conv.Object_Pointer (Stream)),
+				Inflator => Inflate_Init (Window_Bits => Window_Bits, Header => Header),
+				In_Buffer => <>,
+				In_First => 0,
+				In_Last => -1);
 	end Open;
 	
 	procedure Close (Object : in out In_Type) is
@@ -296,8 +285,7 @@ package body zlib.Streams is
 		Last : out Ada.Streams.Stream_Element_Offset)
 	is
 		package Conv is
-			new System.Address_To_Access_Conversions (
-				Ada.Streams.Root_Stream_Type'Class);
+			new System.Address_To_Access_Conversions (Ada.Streams.Root_Stream_Type'Class);
 		procedure Deflating_Read is new Generic_Read (Inflate);
 	begin
 		Deflating_Read (
@@ -333,8 +321,7 @@ package body zlib.Streams is
 		pragma Check (Dynamic_Predicate,
 			Check => not Is_Open (Stream) or else raise Status_Error);
 		package Conv is
-			new System.Address_To_Access_Conversions (
-				Ada.Streams.Root_Stream_Type'Class);
+			new System.Address_To_Access_Conversions (Ada.Streams.Root_Stream_Type'Class);
 	begin
 		Stream.Direction := Mode;
 		Stream.Target := Conv.To_Address (Conv.Object_Pointer (Back));
@@ -347,9 +334,7 @@ package body zlib.Streams is
 				Header => Header,
 				Strategy => Strategy);
 		else
-			Inflate_Init (
-				Stream.Raw,
-				Header => Header);
+			Inflate_Init (Stream.Raw, Header => Header);
 		end if;
 	end Create;
 	
@@ -365,15 +350,11 @@ package body zlib.Streams is
 		return Is_Open (Object.Raw);
 	end Is_Open;
 	
-	procedure Flush (
-		Stream : in out Stream_Type'Class;
-		Mode : in Flush_Mode)
-	is
+	procedure Flush (Stream : in out Stream_Type'Class; Mode : in Flush_Mode) is
 		pragma Check (Dynamic_Predicate,
 			Check => Is_Open (Stream) or else raise Status_Error);
 		package Conv is
-			new System.Address_To_Access_Conversions (
-				Ada.Streams.Root_Stream_Type'Class);
+			new System.Address_To_Access_Conversions (Ada.Streams.Root_Stream_Type'Class);
 	begin
 		if Mode then
 			declare
@@ -410,8 +391,7 @@ package body zlib.Streams is
 		pragma Check (Dynamic_Predicate,
 			Check => Object.Direction = In_Stream or else raise Mode_Error);
 		package Conv is
-			new System.Address_To_Access_Conversions (
-				Ada.Streams.Root_Stream_Type'Class);
+			new System.Address_To_Access_Conversions (Ada.Streams.Root_Stream_Type'Class);
 		procedure DI_Read is new Generic_Read (Deflate_Or_Inflate);
 	begin
 		DI_Read (
@@ -433,8 +413,7 @@ package body zlib.Streams is
 		pragma Check (Dynamic_Predicate,
 			Check => Object.Direction = Out_Stream or else raise Mode_Error);
 		package Conv is
-			new System.Address_To_Access_Conversions (
-				Ada.Streams.Root_Stream_Type'Class);
+			new System.Address_To_Access_Conversions (Ada.Streams.Root_Stream_Type'Class);
 		procedure DI_Write is new Generic_Write (Deflate_Or_Inflate);
 	begin
 		DI_Write (Conv.To_Pointer (Object.Target), Item, Object.Raw);

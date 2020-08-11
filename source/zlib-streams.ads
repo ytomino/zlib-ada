@@ -8,8 +8,7 @@ package zlib.Streams is
 	
 	-- only writing with deflation
 	
-	type Out_Type is
-		limited private;
+	type Out_Type is limited private;
 	
 --	subtype Open_Out_Type is Out_Type
 --		with
@@ -39,8 +38,8 @@ package zlib.Streams is
 	
 	-- only reading with inflation
 	
-	type In_Type (Buffer_Length : Ada.Streams.Stream_Element_Count) is
-		limited private;
+	type In_Type (
+		Buffer_Length : Ada.Streams.Stream_Element_Count) is limited private;
 	
 --	subtype Open_In_Type is In_Type
 --		with
@@ -51,8 +50,7 @@ package zlib.Streams is
 		Stream : not null access Ada.Streams.Root_Stream_Type'Class;
 		Window_Bits : zlib.Window_Bits := Default_Window_Bits;
 		Header : Inflation_Header := Auto;
-		Buffer_Length : Ada.Streams.Stream_Element_Count :=
-			Default_Buffer_Length)
+		Buffer_Length : Ada.Streams.Stream_Element_Count := Default_Buffer_Length)
 		return In_Type;
 	
 	procedure Close (Object : in out In_Type);
@@ -82,9 +80,7 @@ package zlib.Streams is
 	
 	function Is_Open (Object : Stream_Type'Class) return Boolean;
 	
-	procedure Flush (
-		Stream : in out Stream_Type'Class;
-		Mode : in Flush_Mode);
+	procedure Flush (Stream : in out Stream_Type'Class; Mode : in Flush_Mode);
 	
 	function Read_Total_In (Stream : Stream_Type'Class) return Count;
 	function Read_Total_Out (Stream : Stream_Type'Class) return Count;
@@ -100,13 +96,12 @@ private
 	
 	-- only writing with deflation
 	
-	type Out_Type is
-		limited new Ada.Streams.Root_Stream_Type with
-	record
-		Variable_View : not null access Out_Type := Out_Type'Unchecked_Access;
-		Stream : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
-		Deflator : zlib.Stream;
-	end record;
+	type Out_Type is limited new Ada.Streams.Root_Stream_Type
+		with record
+			Variable_View : not null access Out_Type := Out_Type'Unchecked_Access;
+			Stream : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
+			Deflator : zlib.Stream;
+		end record;
 	
 	overriding procedure Read (
 		Object : in out Out_Type;
@@ -119,15 +114,15 @@ private
 	-- only reading with inflation
 	
 	type In_Type (Buffer_Length : Ada.Streams.Stream_Element_Count) is
-		limited new Ada.Streams.Root_Stream_Type with
-	record
-		Variable_View : not null access In_Type := In_Type'Unchecked_Access;
-		Stream : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
-		Inflator : zlib.Stream;
-		In_First : Ada.Streams.Stream_Element_Offset;
-		In_Last : Ada.Streams.Stream_Element_Offset;
-		In_Buffer : Ada.Streams.Stream_Element_Array (1 .. Buffer_Length);
-	end record;
+		limited new Ada.Streams.Root_Stream_Type
+		with record
+			Variable_View : not null access In_Type := In_Type'Unchecked_Access;
+			Stream : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
+			Inflator : zlib.Stream;
+			In_First : Ada.Streams.Stream_Element_Offset;
+			In_Last : Ada.Streams.Stream_Element_Offset;
+			In_Buffer : Ada.Streams.Stream_Element_Array (1 .. Buffer_Length);
+		end record;
 	
 	overriding procedure Read (
 		Object : in out In_Type;
@@ -139,18 +134,15 @@ private
 	
 	-- compatiblity with Zlib.Ada.
 	
-	type Stream_Type is
-		limited new Ada.Streams.Root_Stream_Type with
-	record
-		Direction : Stream_Mode;
-		Target : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
-		Raw : zlib.Stream;
-		In_Buffer : Ada.Streams.Stream_Element_Array (
-			1 ..
-			Default_Buffer_Length);
-		In_First : Ada.Streams.Stream_Element_Offset;
-		In_Last : Ada.Streams.Stream_Element_Offset;
-	end record;
+	type Stream_Type is limited new Ada.Streams.Root_Stream_Type
+		with record
+			Direction : Stream_Mode;
+			Target : System.Address; -- access Ada.Streams.Root_Stream_Type'Class;
+			Raw : zlib.Stream;
+			In_Buffer : Ada.Streams.Stream_Element_Array (1 .. Default_Buffer_Length);
+			In_First : Ada.Streams.Stream_Element_Offset;
+			In_Last : Ada.Streams.Stream_Element_Offset;
+		end record;
 	
 	overriding procedure Read (
 		Object : in out Stream_Type;

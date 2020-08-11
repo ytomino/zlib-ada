@@ -11,8 +11,8 @@ package body zlib is
 	pragma Suppress_Initialization (unsigned_char_array);
 	-- C.unsigned_char_array is not generated in some cases
 	
-	Flush_Table : constant array (Boolean) of C.signed_int := (
-		C.zlib.Z_NO_FLUSH, C.zlib.Z_FINISH);
+	Flush_Table : constant array (Boolean) of C.signed_int :=
+		(C.zlib.Z_NO_FLUSH, C.zlib.Z_FINISH);
 	
 	function To_String (S : not null access constant C.char) return String is
 		Result : String (1 .. Natural (C.string.strlen (S)));
@@ -74,15 +74,16 @@ package body zlib is
 		NC_Stream.Z_Stream.zalloc := null;
 		NC_Stream.Z_Stream.zfree := null;
 		NC_Stream.Z_Stream.opaque := C.void_ptr (System.Null_Address);
-		Result := C.zlib.deflateInit2q (
-			NC_Stream.Z_Stream'Access,
-			level => C.signed_int (Level),
-			method => To_signed_int (Method),
-			windowBits => Make_Window_Bits (Window_Bits, Header),
-			memLevel => C.signed_int (Memory_Level),
-			strategy => To_signed_int (Strategy),
-			version => C.zlib.ZLIB_VERSION (C.zlib.ZLIB_VERSION'First)'Access,
-			stream_size => C.zlib.z_stream'Size / System.Storage_Unit);
+		Result :=
+			C.zlib.deflateInit2q (
+				NC_Stream.Z_Stream'Access,
+				level => C.signed_int (Level),
+				method => To_signed_int (Method),
+				windowBits => Make_Window_Bits (Window_Bits, Header),
+				memLevel => C.signed_int (Memory_Level),
+				strategy => To_signed_int (Strategy),
+				version => C.zlib.ZLIB_VERSION (C.zlib.ZLIB_VERSION'First)'Access,
+				stream_size => C.zlib.z_stream'Size / System.Storage_Unit);
 		if Result /= C.zlib.Z_OK then
 			Raise_Error (Result);
 		end if;
@@ -104,11 +105,12 @@ package body zlib is
 		NC_Stream.Z_Stream.zalloc := null;
 		NC_Stream.Z_Stream.zfree := null;
 		NC_Stream.Z_Stream.opaque := C.void_ptr (System.Null_Address);
-		Result := C.zlib.inflateInit2q (
-			NC_Stream.Z_Stream'Access,
-			windowBits => Make_Window_Bits (Window_Bits, Header),
-			version => C.zlib.ZLIB_VERSION (C.zlib.ZLIB_VERSION'First)'Access,
-			stream_size => C.zlib.z_stream'Size / System.Storage_Unit);
+		Result :=
+			C.zlib.inflateInit2q (
+				NC_Stream.Z_Stream'Access,
+				windowBits => Make_Window_Bits (Window_Bits, Header),
+				version => C.zlib.ZLIB_VERSION (C.zlib.ZLIB_VERSION'First)'Access,
+				stream_size => C.zlib.z_stream'Size / System.Storage_Unit);
 		if Result /= C.zlib.Z_OK then
 			Raise_Error (Result);
 		end if;
@@ -165,14 +167,16 @@ package body zlib is
 		Result := C.zlib.deflate (Z_Stream, Flush_Table (Finish));
 		case Result is
 			when C.zlib.Z_OK | C.zlib.Z_STREAM_END =>
-				In_Last := In_Item'First
-					+ Ada.Streams.Stream_Element_Offset (C_In_Size)
-					- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_in)
-					- 1;
-				Out_Last := Out_Item'First
-					+ Ada.Streams.Stream_Element_Offset (C_Out_Size)
-					- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_out)
-					- 1;
+				In_Last :=
+					In_Item'First
+						+ Ada.Streams.Stream_Element_Offset (C_In_Size)
+						- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_in)
+						- 1;
+				Out_Last :=
+					Out_Item'First
+						+ Ada.Streams.Stream_Element_Offset (C_Out_Size)
+						- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_out)
+						- 1;
 				Finished := Result = C.zlib.Z_STREAM_END;
 				if Finished then
 					NC_Stream.Stream_End := True;
@@ -310,14 +314,16 @@ package body zlib is
 		Result := C.zlib.inflate (Z_Stream, Flush_Table (Finish));
 		case Result is
 			when C.zlib.Z_OK | C.zlib.Z_STREAM_END =>
-				In_Last := In_Item'First
-					+ Ada.Streams.Stream_Element_Offset (C_In_Size)
-					- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_in)
-					- 1;
-				Out_Last := Out_Item'First
-					+ Ada.Streams.Stream_Element_Offset (C_Out_Size)
-					- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_out)
-					- 1;
+				In_Last :=
+					In_Item'First
+						+ Ada.Streams.Stream_Element_Offset (C_In_Size)
+						- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_in)
+						- 1;
+				Out_Last :=
+					Out_Item'First
+						+ Ada.Streams.Stream_Element_Offset (C_Out_Size)
+						- Ada.Streams.Stream_Element_Offset (Z_Stream.avail_out)
+						- 1;
 				Finished := Result = C.zlib.Z_STREAM_END;
 				if Finished then
 					NC_Stream.Stream_End := True;
@@ -372,10 +378,7 @@ package body zlib is
 		return Stream is
 	begin
 		return Result : Stream do
-			Internal_Inflate_Init (
-				Result,
-				Window_Bits,
-				Header);
+			Internal_Inflate_Init (Result, Window_Bits, Header);
 		end return;
 	end Inflate_Init;
 	
@@ -519,10 +522,7 @@ package body zlib is
 		pragma Check (Dynamic_Predicate,
 			Check => not Is_Open (Filter) or else raise Status_Error);
 	begin
-		Internal_Inflate_Init (
-			Filter,
-			Window_Bits,
-			Header);
+		Internal_Inflate_Init (Filter, Window_Bits, Header);
 	end Inflate_Init;
 	
 	procedure Read (

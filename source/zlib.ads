@@ -220,13 +220,15 @@ package zlib is
 private
 	use type Ada.Streams.Stream_Element_Offset;
 	
-	pragma Compile_Time_Error (Window_Bits'Last /= C.zconf.MAX_WBITS,
+	pragma Compile_Time_Error (
+		Window_Bits'Last /= C.zconf.MAX_WBITS,
 		"MAX_WBITS is mismatch");
-	pragma Compile_Time_Error (Memory_Level'Last /= C.zconf.MAX_MEM_LEVEL,
+	pragma Compile_Time_Error (
+		Memory_Level'Last /= C.zconf.MAX_MEM_LEVEL,
 		"MAX_MEM_LEVEL is mismatch");
 	
-	type Finalize_Type is access
-		function (strm : access C.zlib.z_stream) return C.signed_int
+	type Finalize_Type is
+		access function (strm : access C.zlib.z_stream) return C.signed_int
 		with Convention => C;
 	
 	type Non_Controlled_Stream is record
@@ -252,14 +254,11 @@ private
 		
 	private
 		
-		type Stream is
-			limited new Ada.Finalization.Limited_Controlled with
-		record
-			Variable_View : not null access Stream := Stream'Unchecked_Access;
-			Data : aliased Non_Controlled_Stream := (
-				Is_Open => False,
-				others => <>);
-		end record;
+		type Stream is limited new Ada.Finalization.Limited_Controlled
+			with record
+				Variable_View : not null access Stream := Stream'Unchecked_Access;
+				Data : aliased Non_Controlled_Stream := (Is_Open => False, others => <>);
+			end record;
 		
 		overriding procedure Finalize (Object : in out Stream);
 	

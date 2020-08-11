@@ -48,17 +48,24 @@ begin
 		use Ada.Text_IO, Ada.Integer_Text_IO;
 		Compressed_Length : constant Natural :=
 			Integer (Buffer_Last - Buffer'First + 1);
-		Extracted_Length : constant Natural :=
-			Extracted_Last - Extracted'First + 1;
+		Extracted_Length : constant Natural := Extracted_Last - Extracted'First + 1;
 	begin
 		Ada.Integer_Text_IO.Default_Width := 0;
-		Put ("source length     = "); Put (Text'Length); New_Line;
-		Put ("compressed length = "); Put (Compressed_Length); New_Line;
-		Put ("extracted length  = "); Put (Extracted_Length); New_Line;
+		Put ("source length     = ");
+		Put (Text'Length);
+		New_Line;
+		Put ("compressed length = ");
+		Put (Compressed_Length);
+		New_Line;
+		Put ("extracted length  = ");
+		Put (Extracted_Length);
+		New_Line;
 		if Extracted (Extracted'First .. Extracted_Last) = Text then
-			Put ("OK"); New_Line;
+			Put ("OK");
+			New_Line;
 		else
-			Put ("BAD!!"); New_Line;
+			Put ("BAD!!");
+			New_Line;
 		end if;
 	end;
 end str;

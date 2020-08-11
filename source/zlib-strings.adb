@@ -9,9 +9,10 @@ package body zlib.Strings is
 		Finish : in Boolean;
 		Finished : out Boolean)
 	is
-		SEA_In_Item : Ada.Streams.Stream_Element_Array (
-			Ada.Streams.Stream_Element_Offset (In_Item'First) ..
-			Ada.Streams.Stream_Element_Offset (In_Item'Last));
+		SEA_In_Item :
+			Ada.Streams.Stream_Element_Array (
+				Ada.Streams.Stream_Element_Offset (In_Item'First) ..
+				Ada.Streams.Stream_Element_Offset (In_Item'Last));
 		for SEA_In_Item'Address use In_Item'Address;
 		SEA_In_Last : Ada.Streams.Stream_Element_Offset;
 	begin
@@ -33,9 +34,10 @@ package body zlib.Strings is
 		Out_Item : out Ada.Streams.Stream_Element_Array;
 		Out_Last : out Ada.Streams.Stream_Element_Offset)
 	is
-		SEA_In_Item : Ada.Streams.Stream_Element_Array (
-			Ada.Streams.Stream_Element_Offset (In_Item'First) ..
-			Ada.Streams.Stream_Element_Offset (In_Item'Last));
+		SEA_In_Item :
+			Ada.Streams.Stream_Element_Array (
+				Ada.Streams.Stream_Element_Offset (In_Item'First) ..
+				Ada.Streams.Stream_Element_Offset (In_Item'Last));
 		for SEA_In_Item'Address use In_Item'Address;
 		SEA_In_Last : Ada.Streams.Stream_Element_Offset;
 	begin
@@ -57,9 +59,10 @@ package body zlib.Strings is
 		Finish : in Boolean;
 		Finished : out Boolean)
 	is
-		SEA_Out_Item : Ada.Streams.Stream_Element_Array (
-			Ada.Streams.Stream_Element_Offset (Out_Item'First) ..
-			Ada.Streams.Stream_Element_Offset (Out_Item'Last));
+		SEA_Out_Item :
+			Ada.Streams.Stream_Element_Array (
+				Ada.Streams.Stream_Element_Offset (Out_Item'First) ..
+				Ada.Streams.Stream_Element_Offset (Out_Item'Last));
 		for SEA_Out_Item'Address use Out_Item'Address;
 		SEA_Out_Last : Ada.Streams.Stream_Element_Offset;
 	begin
@@ -81,9 +84,10 @@ package body zlib.Strings is
 		Out_Item : out String;
 		Out_Last : out Natural)
 	is
-		SEA_Out_Item : Ada.Streams.Stream_Element_Array (
-			Ada.Streams.Stream_Element_Offset (Out_Item'First) ..
-			Ada.Streams.Stream_Element_Offset (Out_Item'Last));
+		SEA_Out_Item :
+			Ada.Streams.Stream_Element_Array (
+				Ada.Streams.Stream_Element_Offset (Out_Item'First) ..
+				Ada.Streams.Stream_Element_Offset (Out_Item'Last));
 		for SEA_Out_Item'Address use Out_Item'Address;
 		SEA_Out_Last : Ada.Streams.Stream_Element_Offset;
 	begin
@@ -103,9 +107,10 @@ package body zlib.Strings is
 		Finish : in Boolean;
 		Finished : out Boolean)
 	is
-		SEA_Out_Item : Ada.Streams.Stream_Element_Array (
-			Ada.Streams.Stream_Element_Offset (Out_Item'First) ..
-			Ada.Streams.Stream_Element_Offset (Out_Item'Last));
+		SEA_Out_Item :
+			Ada.Streams.Stream_Element_Array (
+				Ada.Streams.Stream_Element_Offset (Out_Item'First) ..
+				Ada.Streams.Stream_Element_Offset (Out_Item'Last));
 		for SEA_Out_Item'Address use Out_Item'Address;
 		SEA_Out_Last : Ada.Streams.Stream_Element_Offset;
 	begin
