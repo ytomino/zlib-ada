@@ -1,5 +1,7 @@
 -- test for deflating and inflating
 with Ada.Command_Line;
+with Ada.Directories;
+with Ada.Environment_Variables;
 with Ada.Text_IO;
 with Ada.Streams.Stream_IO;
 with zlib;
@@ -21,6 +23,10 @@ begin
 			Ada.Streams.Stream_IO.In_File,
 			"test_di.adb");
 		declare
+			Compressed_File_Name : constant String :=
+				Ada.Directories.Compose (
+					Ada.Environment_Variables.Value ("TMPDIR", Default => "/tmp"),
+					"test_di.gz");
 			Size : constant Ada.Streams.Stream_IO.Count :=
 				Ada.Streams.Stream_IO.Size (Source_File);
 			Source :
@@ -39,7 +45,7 @@ begin
 				Out_Last : Ada.Streams.Stream_Element_Offset;
 				Finished : Boolean;
 			begin
-				Ada.Streams.Stream_IO.Create (Gz_File, Name => "test_di.gz");
+				Ada.Streams.Stream_IO.Create (Gz_File, Name => Compressed_File_Name);
 				loop
 					if Verbose then
 						Ada.Text_IO.Put ('*');
@@ -76,7 +82,7 @@ begin
 				Ada.Streams.Stream_IO.Open (
 					Gz_File,
 					Ada.Streams.Stream_IO.In_File,
-					Name => "test_di.gz");
+					Name => Compressed_File_Name);
 				loop
 					if Verbose then
 						Ada.Text_IO.Put ('*');

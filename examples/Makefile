@@ -90,4 +90,4 @@ endif
 
 clean:
 	-rm -r *.noindex bin
-	-rm test_di.gz testzlib.out testzlib.zlb testzlib.in
+	-rm testzlib.out testzlib.zlb testzlib.in
