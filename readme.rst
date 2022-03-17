@@ -19,11 +19,11 @@ headmaster
 Usage
 -----
 
-1. Translate C headers with headmaster. ::
+1. Translate the C headers with headmaster. ::
    
     $ headmaster --to ada -p -D import-dir zlib-ada/source/import.h
 
-2. Add source directories of zlib-ada and translated headers
+2. Add the source directories of zlib-ada and the translated headers
    to search path for gnatmake. ::
    
     $ gnatmake -Izlib-ada/source -Iimport-dir your_main.adb
