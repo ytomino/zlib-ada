@@ -1,4 +1,5 @@
 /bin
+/import
 /test_di.gz
 /testzlib.in
 /testzlib.out
