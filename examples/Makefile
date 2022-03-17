@@ -84,5 +84,5 @@ $(IMPORTDIR): $(SOURCEDIR)/import.h
 endif
 
 clean:
-	-rm -rf *.noindex bin
+	-rm -r *.noindex bin
 	-rm test_di.gz testzlib.out testzlib.zlb testzlib.in
