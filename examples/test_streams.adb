@@ -1,14 +1,21 @@
+with Ada.Command_Line;
 with Ada.Streams;
 with Ada.Streams.Stream_IO;
 with Ada.Text_IO;
 with Ada.Integer_Text_IO;
 with zlib.Streams;
 procedure test_streams is
+	Verbose : Boolean := False;
 	Text : constant String := "Hello, zlib!";
 	Temporary_File : Ada.Streams.Stream_IO.File_Type;
 	Extracted : String (1 .. 1024);
 	Extracted_Last : Natural;
 begin
+	for I in 1 .. Ada.Command_Line.Argument_Count loop
+		if Ada.Command_Line.Argument (I) = "-v" then
+			Verbose := True;
+		end if;
+	end loop;
 	Ada.Streams.Stream_IO.Create (Temporary_File); -- temporary file
 	declare
 		Deflator : zlib.Streams.Out_Type :=
@@ -43,23 +50,21 @@ begin
 			Integer (Ada.Streams.Stream_IO.Size (Temporary_File));
 		Extracted_Length : constant Natural := Extracted_Last - Extracted'First + 1;
 	begin
-		Ada.Integer_Text_IO.Default_Width := 0;
-		Put ("source length     = ");
-		Put (Text'Length);
-		New_Line;
-		Put ("compressed length = ");
-		Put (Compressed_Length);
-		New_Line;
-		Put ("extracted length  = ");
-		Put (Extracted_Length);
-		New_Line;
-		if Extracted (Extracted'First .. Extracted_Last) = Text then
-			Put ("OK");
+		if Verbose then
+			Ada.Integer_Text_IO.Default_Width := 0;
+			Put ("source length     = ");
+			Put (Text'Length);
 			New_Line;
-		else
-			Put ("BAD!!");
+			Put ("compressed length = ");
+			Put (Compressed_Length);
+			New_Line;
+			Put ("extracted length  = ");
+			Put (Extracted_Length);
 			New_Line;
 		end if;
+		pragma Assert (Extracted (Extracted'First .. Extracted_Last) = Text);
 	end;
 	Ada.Streams.Stream_IO.Close (Temporary_File);
+	-- finish
+	Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error.all, "ok");
 end test_streams;

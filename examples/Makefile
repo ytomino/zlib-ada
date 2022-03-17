@@ -51,12 +51,13 @@ HFLAGS+=-gcc="$(GCC)"
 endif
 
 EXAMPLES=$(basename $(filter-out b~%,$(wildcard *.adb)))
+TESTS=$(filter test_%,$(EXAMPLES))
 
 OFFICIAL_DEMO:=$(notdir $(basename $(wildcard official-demo/*.adb)))
 
-.PHONY: all clean $(EXAMPLES) $(OFFICIAL_DEMO)
+.PHONY: all check clean $(EXAMPLES) $(OFFICIAL_DEMO)
 
-all: $(EXAMPLES) $(OFFICIAL_DEMO)
+all: $(addprefix $(BUILDDIR)/,$(EXAMPLES) $(OFFICIAL_DEMO)) $(BINLN)
 
 $(BUILDDIR)/%: %.adb $(wildcard $(SOURCEDIR)/*) | $(BUILDDIR) $(IMPORTDIR)
 	$(GCCPREFIX)gnatmake$(GCCSUFFIX) -c -I$(SOURCEDIR) $< $(GFLAGS) $(MFLAGS) -cargs $(CFLAGS)
@@ -74,8 +75,12 @@ $(BUILDDIR):
 $(BINLN): | $(BUILDDIR)
 	ln -s $(BUILDDIR) $(BINLN)
 
-$(EXAMPLES): %: $(BUILDDIR)/% $(BINLN)
-$(OFFICIAL_DEMO): %: $(BUILDDIR)/% $(BINLN)
+$(filter-out test_%,$(EXAMPLES)) $(OFFICIAL_DEMO): %: $(BUILDDIR)/% $(BINLN)
+
+check: all $(TESTS)
+
+$(TESTS): %: $(BUILDDIR)/%
+	$<
 
 ifeq ($(IMPORTDIR),$(BUILDDIR)/import)
 $(IMPORTDIR): $(SOURCEDIR)/import.h

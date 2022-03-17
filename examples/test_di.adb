@@ -1,11 +1,18 @@
 -- test for deflating and inflating
+with Ada.Command_Line;
 with Ada.Text_IO;
 with Ada.Streams.Stream_IO;
 with zlib;
 procedure test_di is
 	use type Ada.Streams.Stream_Element;
 	use type Ada.Streams.Stream_Element_Offset;
+	Verbose : Boolean := False;
 begin
+	for I in 1 .. Ada.Command_Line.Argument_Count loop
+		if Ada.Command_Line.Argument (I) = "-v" then
+			Verbose := True;
+		end if;
+	end loop;
 	declare
 		Source_File : Ada.Streams.Stream_IO.File_Type;
 	begin
@@ -34,7 +41,9 @@ begin
 			begin
 				Ada.Streams.Stream_IO.Create (Gz_File, Name => "test_di.gz");
 				loop
-					Ada.Text_IO.Put ('*');
+					if Verbose then
+						Ada.Text_IO.Put ('*');
+					end if;
 					zlib.Deflate (
 						Stream,
 						Source (First .. Source'Last),
@@ -48,7 +57,9 @@ begin
 					First := In_Last + 1;
 				end loop;
 				Ada.Streams.Stream_IO.Close (Gz_File);
-				Ada.Text_IO.New_Line;
+				if Verbose then
+					Ada.Text_IO.New_Line;
+				end if;
 			end;
 			declare
 				Gz_File : Ada.Streams.Stream_IO.File_Type;
@@ -67,7 +78,9 @@ begin
 					Ada.Streams.Stream_IO.In_File,
 					Name => "test_di.gz");
 				loop
-					Ada.Text_IO.Put ('*');
+					if Verbose then
+						Ada.Text_IO.Put ('*');
+					end if;
 					if In_First > Input'Last then
 						Ada.Streams.Stream_IO.Read (Gz_File, Input, In_Last);
 						In_First := Input'First;
@@ -90,11 +103,15 @@ begin
 					In_First := In_Used + 1;
 				end loop;
 				Ada.Streams.Stream_IO.Close (Gz_File);
-				Ada.Text_IO.New_Line;
+				if Verbose then
+					Ada.Text_IO.New_Line;
+				end if;
 				if Index /= Source'Last + 1 then
 					raise Program_Error;
 				end if;
 			end;
 		end;
 	end;
+	-- finish
+	Ada.Text_IO.Put_Line (Ada.Text_IO.Standard_Error.all, "ok");
 end test_di;
