@@ -6,10 +6,12 @@ What's this?
 
 Yet another Ada binding to zlib (compatibility with ZLib.Ada).
 
-Depending tools and libraries
------------------------------
+Prerequisites
+-------------
 
-zlib
+GCC >= 4.7
+ https://gcc.gnu.org/zlib
+zlib >= 1.0
  http://www.zlib.net/
 headmaster
  http://github.com/ytomino/headmaster
