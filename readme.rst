@@ -36,7 +36,7 @@ I recommend the zlib License that is same as zlib.
 
 **license of zlib-ada (1)** ::
 
- Copyright 2010 YT. All rights reserved.
+ Copyright 2010-2022 YT. All rights reserved.
  
  Redistribution and use in source and binary forms, with or without
  modification, are permitted provided that the following conditions
@@ -60,7 +60,7 @@ I recommend the zlib License that is same as zlib.
 
 **license of zlib-ada (2)** ::
 
-   Copyright (C) 2010 YT
+   Copyright (C) 2010-2022 YT
  
    This software is provided 'as-is', without any express or implied
    warranty.  In no event will the authors be held liable for any damages
