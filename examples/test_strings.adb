@@ -2,7 +2,7 @@ with Ada.Streams;
 with Ada.Text_IO;
 with Ada.Integer_Text_IO;
 with zlib.Strings;
-procedure str is
+procedure test_strings is
 	use type Ada.Streams.Stream_Element_Offset;
 	Text : constant String := "Hello, zlib!";
 	Buffer : Ada.Streams.Stream_Element_Array (0 .. 1023);
@@ -68,4 +68,4 @@ begin
 			New_Line;
 		end if;
 	end;
-end str;
+end test_strings;

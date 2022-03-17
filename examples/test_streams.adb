@@ -3,7 +3,7 @@ with Ada.Streams.Stream_IO;
 with Ada.Text_IO;
 with Ada.Integer_Text_IO;
 with zlib.Streams;
-procedure stream is
+procedure test_streams is
 	Text : constant String := "Hello, zlib!";
 	Temporary_File : Ada.Streams.Stream_IO.File_Type;
 	Extracted : String (1 .. 1024);
@@ -62,4 +62,4 @@ begin
 		end if;
 	end;
 	Ada.Streams.Stream_IO.Close (Temporary_File);
-end stream;
+end test_streams;
