@@ -99,5 +99,6 @@ $(IMPORTDIR): $(SOURCEDIR)/import.h
 endif
 
 clean:
-	-rm -r *.noindex bin
+	-$(if $(BINLN),[ -h "$(BINLN)" ] && rm "$(BINLN)")
+	-rm -r $(BUILDDIR)
 	-rm testzlib.out testzlib.zlb testzlib.in
