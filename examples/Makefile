@@ -43,7 +43,7 @@ endif
 
 GARGS=$(addprefix --RTS=,$(abspath $(DRAKE_RTSDIR)))
 MARGS=-D $(BUILDDIR) -gnatA $(addprefix -gnatec=,$(wildcard *.adc)) \
-      $(addprefix -I,$(IMPORTDIR))
+      $(addprefix -I,$(IMPORTDIR) $(SOURCEDIR))
 CARGS=$(CFLAGS) $(CFLAGS_ADA)
 BARGS=-E -x
 LARGS=$(LDFLAGS)
@@ -65,16 +65,15 @@ OFFICIAL_DEMO:=$(notdir $(basename $(wildcard official-demo/*.adb)))
 all: $(addprefix $(BUILDDIR)/,$(EXAMPLES) $(OFFICIAL_DEMO)) $(BINLN)
 
 $(BUILDDIR)/%: %.adb $(wildcard $(SOURCEDIR)/*) | $(BUILDDIR) $(IMPORTDIR)
-	$(GCCPREFIX)gnatmake$(GCCSUFFIX) -c -I$(SOURCEDIR) $< $(GARGS) $(MARGS) \
-		-cargs $(CARGS)
+	$(GCCPREFIX)gnatmake$(GCCSUFFIX) -c $< $(GARGS) $(MARGS) -cargs $(CARGS)
 	cd $(BUILDDIR) && $(GCCPREFIX)gnatbind$(GCCSUFFIX) \
 		$(basename $(notdir $<)).ali $(GARGS) $(BARGS)
 	cd $(BUILDDIR) && $(GCCPREFIX)gnatlink$(GCCSUFFIX) -o ../$@ \
 		$(basename $(notdir $<)).ali $(GARGS) $(LARGS)
 
 $(BUILDDIR)/%: official-demo/%.adb $(wildcard $(SOURCEDIR)/*) | $(BUILDDIR) $(IMPORTDIR)
-	$(GCCTPREFIX)gnatmake$(GCCSUFFIX) -c -I$(SOURCEDIR) $< $(GARGS) $(MARGS) \
-		-cargs $(CARGS) -gnatwA -gnatyN
+	$(GCCTPREFIX)gnatmake$(GCCSUFFIX) -c $< $(GARGS) $(MARGS) -cargs $(CARGS) \
+		-gnatwA -gnatyN
 	cd $(BUILDDIR) && $(GCCPREFIX)gnatbind$(GCCSUFFIX) \
 		$(basename $(notdir $<)).ali $(GARGS) $(BARGS)
 	cd $(BUILDDIR) && $(GCCPREFIX)gnatlink$(GCCSUFFIX) -o ../$@ \
